@@ -2,6 +2,7 @@ import { Search, Users, Stethoscope, Activity, FileStack, LayoutDashboard, FileT
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from './AppContext';
 import { cn } from '../lib/utils';
+import { DOCTOR_CONFIG } from '../lib/config';
 
 export function Sidebar() {
   // Estado de ruta y navegación para resaltar la opción actual.
@@ -29,7 +30,7 @@ export function Sidebar() {
       <div className="p-6 border-b border-white/10 shrink-0">
         {/* Encabezado de la aplicación visible en la barra lateral. */}
         <h1 className="text-2xl font-bold tracking-tight italic">ObstetrApp</h1>
-        <p className="text-[10px] uppercase tracking-widest opacity-60 mt-1">Dr. Nicora</p>
+        <p className="text-[10px] uppercase tracking-widest opacity-60 mt-1">{DOCTOR_CONFIG.sidebarName}</p>
       </div>
       
       <div className="flex flex-1 flex-col overflow-y-auto custom-scrollbar">

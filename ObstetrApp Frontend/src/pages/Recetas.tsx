@@ -4,6 +4,7 @@ import { repositories } from '../lib/di';
 import { Printer, CalendarDays, User, Plus, Trash2, FileText, Activity, FlaskConical, CalendarClock, Stethoscope, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PrintHeader } from '../components/PrintHeader';
+import { DOCTOR_CONFIG } from '../lib/config';
 import { v4 as uuidv4 } from 'uuid';
 import { Receta } from '../domain/entities/Receta';
 import { Reposo } from '../domain/entities/Reposo';
@@ -605,8 +606,8 @@ export function Recetas() {
 
                 <div className="mt-20 pt-8 pb-10 flex flex-col items-center w-full break-inside-avoid">
                   <div className="border-t-2 border-black w-64 pt-2 text-center">
-                    <p className="font-bold text-sm text-black">Dr. José Nicora</p>
-                    <p className="text-xs text-black">Ginecología y Obstetricia - Rg. Prof. 13606</p>
+                    <p className="font-bold text-sm text-black">{DOCTOR_CONFIG.name}</p>
+                    <p className="text-xs text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
                   </div>
                 </div>
               </div>
@@ -648,8 +649,8 @@ export function Recetas() {
 
                 <div className="mt-20 pt-8 pb-10 flex flex-col items-center w-full justify-end break-inside-avoid">
                   <div className="border-t-2 border-black w-64 pt-2 text-center">
-                    <p className="font-bold text-sm text-black">Dr. José Nicora</p>
-                    <p className="text-xs text-black">Ginecología y Obstetricia - Rg. Prof. 13606</p>
+                    <p className="font-bold text-sm text-black">{DOCTOR_CONFIG.name}</p>
+                    <p className="text-xs text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
                   </div>
                 </div>
               </div>
@@ -687,8 +688,8 @@ export function Recetas() {
 
               <div className="mt-8 pt-4 pb-2 flex flex-col items-center w-full justify-end break-inside-avoid">
                 <div className="border-t border-black w-56 pt-1 text-center">
-                  <p className="font-bold text-xs text-black">Dr. José Nicora</p>
-                  <p className="text-[10px] text-black">Ginecología y Obstetricia - Rg. Prof. 13606</p>
+                  <p className="font-bold text-xs text-black">{DOCTOR_CONFIG.name}</p>
+                  <p className="text-[10px] text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
                 </div>
               </div>
             </div>
@@ -737,8 +738,8 @@ export function Recetas() {
 
               <div className="mt-8 pt-4 pb-2 flex flex-col items-center w-full justify-end break-inside-avoid">
                 <div className="border-t border-black w-56 pt-1 text-center">
-                  <p className="font-bold text-xs text-black">Dr. José Nicora</p>
-                  <p className="text-[10px] text-black">Ginecología y Obstetricia - Rg. Prof. 13606</p>
+                  <p className="font-bold text-xs text-black">{DOCTOR_CONFIG.name}</p>
+                  <p className="text-[10px] text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
                 </div>
               </div>
             </div>
