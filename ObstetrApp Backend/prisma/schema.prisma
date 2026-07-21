@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Paciente {
+  cedula_id String @id
+  nombre String
+  apellido String
+  domicilio String?
+  telefono String?
+  localidad String?
+  fecha_nacimiento String
+  edad Int
+  menor_15_mayor_35 Int
+  etnia String
+  estudios_nivel String
+  estudios_alfabetiza Int
+  estudios_anios_mayor_nivel Int?
+  estado_civil String
+  vive_sola Int
+  lugar_control_habitual String?
+  lugar_parto_aborto_previsto String?
+  identificacion_manual String?
+  grupo_sanguineo String?
+  factor_rh String?
+  menarca Int?
+  fum String?
+  ritmo_menstrual String?
+  metodo_anticonceptivo String?
+  tiene_dismenorrea Boolean?
+  tiene_dispareunia Boolean?
+  tiene_sangrado_anormal Boolean?
+  tiene_flujo_vaginal Boolean?
+  createdAt DateTime @default(now())
+
+  antecedentes Antecedentes?
+  embarazos Embarazo[]
+  citas Cita[]
+  recetas Receta[]
+  reposos Reposo[]
+  solicitudesLaboratorio SolicitudLaboratorio[]
+}
+
+model Antecedentes {
+  cedula_id String @id
+  ant_tbc Int
+  ant_diabetes Int
+  ant_hipertension Int
+  ant_preeclampsia Int
+  ant_eclampsia Int
+  ant_cardiopatia Int
+  ant_nefropatia Int
+  ant_infertilidad Int
+  ant_cirugia_genito_urinaria Int
+  ant_violencia Int
+  ant_otra_condicion_grave Int
+  ant_cirugias_especificas_texto String?
+  hist_gestas_previas Int
+  hist_partos Int
+  hist_vaginales Int
+  hist_cesareas Int
+  hist_abortos Int
+  hist_nacidos_vivos Int
+  hist_nacidos_muertos Int
+  hist_viven Int
+  hist_abortos_tres_espontaneos_consecutivos Int
+  hist_nacidos_vivos_muertos_1ra_semana Int
+  hist_nacidos_vivos_muertos_despues_1ra_semana Int
+  hist_fin_embarazo_anterior_fecha String?
+  hist_fin_embarazo_anterior_menos_de_1_anio Int
+  hist_embarazo_planeado Int
+  hist_fracaso_anticonceptivo String
+  inm_antirubeola String
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+}
+
+model Embarazo {
+  id_embarazo String @id @default(uuid())
+  cedula_id String
+  estado String
+  peso_anterior_kg Float
+  talla_cm Int
+  fum String
+  fpp String
+  eg_confiable_por String?
+  dudas_fum Boolean?
+  notas_parto String?
+  anotaciones_margen_superior String?
+  fumadora_activa_1tr Int
+  fumadora_activa_2tr Int
+  fumadora_activa_3tr Int
+  fumadora_pasiva_1tr Int
+  fumadora_pasiva_2tr Int
+  fumadora_pasiva_3tr Int
+  drogas_1tr Int
+  drogas_2tr Int
+  drogas_3tr Int
+  alcohol_1tr Int
+  alcohol_2tr Int
+  alcohol_3tr Int
+  violencia_1tr Int
+  violencia_2tr Int
+  violencia_3tr Int
+  inm_antitetanica_vigente Int
+  inm_antitetanica_dosis1 Int
+  inm_antitetanica_dosis2 Int
+  inm_antitetanica_dosis_1_mes Int?
+  inm_antitetanica_dosis_2_mes Int?
+  inm_antitetanica_dosis_3_mes Int?
+  inm_examen_odontologico Int
+  inm_examen_mamas Int
+  inm_cervix_inspeccion String
+  inm_cervix_pap String
+  inm_cervix_colp String
+  eval_trimestres_json String?
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+  laboratorios Laboratorio[]
+  controles Control[]
+}
+
+model Laboratorio {
+  embarazo_id String @id
+  isoinmunizacion_rh Int?
+  chagas String?
+  paludismo_malaria String?
+  bacteriuria_resultado String?
+  bacteriuria_semanas String?
+  toxo_menor_20sem_igg String?
+  toxo_mayor_20sem_igg String?
+  toxo_primera_consulta_igm String?
+  vih_menor_20sem_solicitado Int?
+  vih_menor_20sem_realizado Int?
+  vih_menor_20sem_resultado String?
+  vih_mayor_20sem_solicitado Int?
+  vih_mayor_20sem_realizado Int?
+  vih_mayor_20sem_resultado String?
+  sifilis_vdrl_menor_20sem String?
+  sifilis_vdrl_mayor_20sem String?
+  sifilis_confirmada_fta Int?
+  sifilis_tratamiento String?
+  hb_menor_20sem Float?
+  hb_mayor_20sem Float?
+  hierro_folatos_indicados Int?
+  glucemia_menor_20sem Float?
+  glucemia_mayor_30sem Float?
+  estreptococo_b String?
+  preparacion_parto Int?
+  consejeria_lactancia Int?
+  tsh_valor Float?
+  hb_hepatitis_b String?
+  ttgo_resultado_mg_dl Float?
+  campo_secundario_valor Float?
+
+  embarazo Embarazo @relation(fields: [embarazo_id], references: [id_embarazo], onDelete: Cascade)
+}
+
+model Control {
+  id_control String @id @default(uuid())
+  embarazo_id String
+  fecha_visita String
+  eg_semanas Int
+  peso_kg Float
+  pa_sistolica Int?
+  pa_diastolica Int?
+  altura_uterina_cm Int?
+  presentacion_fetal String?
+  lcf_lpm String?
+  movimientos_fetales String?
+  proteinuria String?
+  signos_alarma_examenes_tratamientos String?
+  iniciales_tecnico String
+  proxima_cita String
+
+  embarazo Embarazo @relation(fields: [embarazo_id], references: [id_embarazo], onDelete: Cascade)
+}
+
+model Cita {
+  id_cita String @id @default(uuid())
+  cedula_id String
+  fecha_cita String
+  hora_cita String?
+  motivo String?
+  comentarios String?
+  diagnostico String?
+  plan String?
+  sintomas String?
+  examen_fisico String?
+  pa String?
+  fc String?
+  fr String?
+  sato2 String?
+  glicemia String?
+  peso String?
+  estado String
+  tipo String?
+  eco_eg String?
+  eco_peso String?
+  eco_ila String?
+  eco_diagnostico String?
+  pap_aspecto String?
+  pap_resultado String?
+  pap_observaciones String?
+  gyn_motivo String?
+  gyn_examen_mamario String?
+  gyn_abdomen_pelvis String?
+  gyn_especuloscopia String?
+  gyn_tacto_vaginal String?
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+}
+
+model Receta {
+  id_receta String @id @default(uuid())
+  cedula_id String
+  fecha_emision String
+  medicamentos String // SQL text field containing stringified JSON, compatible with all SQL systems
+  indicaciones String?
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+}
+
+model Reposo {
+  id_reposo String @id @default(uuid())
+  cedula_id String
+  fecha_emision String
+  dias_reposo Int
+  diagnostico String
+  fecha_inicio String
+  tipo_reposo String // "Fisico", "Laboral", "Absoluto"
+  observaciones String?
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+}
+
+model SolicitudLaboratorio {
+  id_solicitud String @id @default(uuid())
+  cedula_id String
+  fecha_emision String
+  estudios_solicitados String // SQL text field containing stringified JSON
+  observaciones String?
+
+  paciente Paciente @relation(fields: [cedula_id], references: [cedula_id], onDelete: Cascade)
+}

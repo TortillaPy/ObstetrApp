@@ -1,0 +1,6 @@
+{
+  "name": "ObstetrApp",
+  "description": "Aplicación de consultas médicas y control prenatal enfocada en la usabilidad clínica.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,43 @@
+export type FactorRh = '+' | '-';
+export type Chagas = 'positivo' | 'negativo' | 'no_se_hizo';
+export type PaludismoMalaria = 'positivo' | 'negativo' | 'no_se_hizo';
+export type BacteriuriaRes = 'normal' | 'anormal' | 'no_se_hizo';
+export type BacteriuriaSem = '<20_sem' | '>=20_sem';
+export type ToxoplasmosisVal = 'positivo' | 'negativo' | 'no_se_hizo';
+export type SifilisVDLR = 'positivo' | 'negativo' | 'no_se_hizo';
+export type SifilisTratamiento = 'si' | 'no' | 'no_corresponde';
+export type EstreptococoB = 'positivo' | 'negativo' | 'no_se_hizo';
+
+export interface Laboratorio {
+  embarazo_id: string;
+  isoinmunizacion_rh?: 0 | 1;
+  chagas?: Chagas;
+  paludismo_malaria?: PaludismoMalaria;
+  bacteriuria_resultado?: BacteriuriaRes;
+  bacteriuria_semanas?: BacteriuriaSem;
+  toxo_menor_20sem_igg?: ToxoplasmosisVal;
+  toxo_mayor_20sem_igg?: ToxoplasmosisVal;
+  toxo_primera_consulta_igm?: ToxoplasmosisVal;
+  vih_menor_20sem_solicitado?: 0 | 1;
+  vih_menor_20sem_realizado?: 0 | 1;
+  vih_menor_20sem_resultado?: '+' | '-';
+  vih_mayor_20sem_solicitado?: 0 | 1;
+  vih_mayor_20sem_realizado?: 0 | 1;
+  vih_mayor_20sem_resultado?: '+' | '-';
+  sifilis_vdrl_menor_20sem?: SifilisVDLR;
+  sifilis_vdrl_mayor_20sem?: SifilisVDLR;
+  sifilis_confirmada_fta?: 0 | 1;
+  sifilis_tratamiento?: SifilisTratamiento;
+  hb_menor_20sem?: number;
+  hb_mayor_20sem?: number;
+  hierro_folatos_indicados?: 0 | 1;
+  glucemia_menor_20sem?: number;
+  glucemia_mayor_30sem?: number;
+  estreptococo_b?: EstreptococoB;
+  preparacion_parto?: 0 | 1;
+  consejeria_lactancia?: 0 | 1;
+  tsh_valor?: number;
+  hb_hepatitis_b?: string;
+  ttgo_resultado_mg_dl?: number;
+  campo_secundario_valor?: number;
+}
