@@ -225,3 +225,16 @@ export class SolicitudLaboratorioApiRepository implements ISolicitudLaboratorioR
     return fetchApi(`/solicitudes-laboratorio/paciente/${encodeURIComponent(cedulaId)}`) || [];
   }
 }
+
+export async function updateDoctorSubscription(id: string, data: {
+  estado_suscripcion?: string;
+  fecha_vencimiento?: string | null;
+  plan?: string;
+  monto_mensual?: number | null;
+  notas_admin?: string | null;
+}) {
+  return fetchApi(`/auth/users/${id}/subscription`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

@@ -12,6 +12,11 @@ export interface AuthUser {
   nombre_clinica?: string | null;
   direccion?: string | null;
   telefono?: string | null;
+  estado_suscripcion?: string;
+  fecha_vencimiento?: string | null;
+  plan?: string;
+  monto_mensual?: number | null;
+  notas_admin?: string | null;
 }
 
 export interface AuthenticatedRequest extends Request {

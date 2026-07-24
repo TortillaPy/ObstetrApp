@@ -10,7 +10,16 @@ export interface DoctorUser {
   apellido: string;
   email: string;
   especialidad?: string;
+  registro_prof?: string | null;
+  nombre_clinica?: string | null;
+  direccion?: string | null;
+  telefono?: string | null;
   rol: 'MEDICO' | 'ADMIN';
+  estado_suscripcion?: 'ACTIVO' | 'TRIAL' | 'PENDIENTE_PAGO' | 'SUSPENDIDO' | 'PERMANENTE';
+  fecha_vencimiento?: string | null;
+  plan?: 'PREMIUM' | 'BASICO' | 'ULTIMATE';
+  monto_mensual?: number | null;
+  notas_admin?: string | null;
 }
 
 interface AppContextType {

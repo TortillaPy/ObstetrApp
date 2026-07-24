@@ -20,8 +20,13 @@ model Usuario {
   nombre_clinica String?
   direccion     String?
   telefono      String?
-  activo        Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  activo             Boolean  @default(true)
+  estado_suscripcion String   @default("ACTIVO") // ACTIVO, TRIAL, PENDIENTE_PAGO, SUSPENDIDO, PERMANENTE
+  fecha_vencimiento  String?  // YYYY-MM-DD
+  plan               String   @default("PREMIUM") // PREMIUM, BASICO, ULTIMATE
+  monto_mensual      Float?
+  notas_admin        String?
+  createdAt          DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   pacientes     Paciente[]

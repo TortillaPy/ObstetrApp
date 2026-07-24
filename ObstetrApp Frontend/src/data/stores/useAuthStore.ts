@@ -11,6 +11,11 @@ export interface UserProfile {
   nombre_clinica?: string | null;
   direccion?: string | null;
   telefono?: string | null;
+  estado_suscripcion?: 'ACTIVO' | 'TRIAL' | 'PENDIENTE_PAGO' | 'SUSPENDIDO' | 'PERMANENTE';
+  fecha_vencimiento?: string | null;
+  plan?: 'PREMIUM' | 'BASICO' | 'ULTIMATE';
+  monto_mensual?: number | null;
+  notas_admin?: string | null;
 }
 
 interface AuthState {

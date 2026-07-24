@@ -28,6 +28,11 @@ const formatUserPayload = (user: any) => ({
   direccion: user.direccion || null,
   telefono: user.telefono || null,
   activo: user.activo,
+  estado_suscripcion: user.estado_suscripcion || 'ACTIVO',
+  fecha_vencimiento: user.fecha_vencimiento || null,
+  plan: user.plan || 'PREMIUM',
+  monto_mensual: user.monto_mensual ? Number(user.monto_mensual) : null,
+  notas_admin: user.notas_admin || null,
 });
 
 // Registro de usuario (EXCLUSIVO PARA ADMIN)
@@ -91,6 +96,10 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     const user = await prisma.usuario.findUnique({ where: { email: cleanEmail } });
     if (!user || !user.activo) {
       return res.status(401).json({ error: 'Credenciales inválidas o usuario inactivo' });
+    }
+
+    if (user.rol !== 'ADMIN' && user.estado_suscripcion === 'SUSPENDIDO') {
+      return res.status(403).json({ error: 'Tu suscripción a ObstetrApp se encuentra suspendida o vencida. Por favor contacta a soporte técnico por WhatsApp.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -227,5 +236,32 @@ authRouter.patch('/users/:id/reset-password', authMiddleware, adminOnlyMiddlewar
   } catch (err: any) {
     console.error('Error al restablecer contraseña:', err);
     res.status(500).json({ error: 'Error al restablecer la contraseña' });
+  }
+});
+
+// Actualizar suscripción de usuario (EXCLUSIVO PARA ADMIN)
+authRouter.patch('/users/:id/subscription', authMiddleware, adminOnlyMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { estado_suscripcion, fecha_vencimiento, plan, monto_mensual, notas_admin } = req.body;
+
+    const updatedUser = await prisma.usuario.update({
+      where: { id_usuario: id },
+      data: {
+        ...(estado_suscripcion && { estado_suscripcion }),
+        ...(fecha_vencimiento !== undefined && { fecha_vencimiento: fecha_vencimiento || null }),
+        ...(plan && { plan }),
+        ...(monto_mensual !== undefined && { monto_mensual: monto_mensual !== null ? Number(monto_mensual) : null }),
+        ...(notas_admin !== undefined && { notas_admin: notas_admin || null }),
+      },
+    });
+
+    res.json({
+      message: 'Suscripción actualizada exitosamente',
+      user: formatUserPayload(updatedUser),
+    });
+  } catch (err: any) {
+    console.error('Error al actualizar suscripción:', err);
+    res.status(500).json({ error: 'Error interno al actualizar la suscripción' });
   }
 });

@@ -30,6 +30,8 @@ export async function runSeed() {
           direccion: 'Asunción, Paraguay',
           telefono: '+595 985 944757',
           activo: true,
+          estado_suscripcion: 'PERMANENTE',
+          plan: 'ULTIMATE',
         },
         {
           email: doctorEmail,
@@ -43,6 +45,10 @@ export async function runSeed() {
           direccion: 'Av. España 1450 e/ Pitiantuta, Asunción',
           telefono: '+595 985 000000',
           activo: true,
+          estado_suscripcion: 'ACTIVO',
+          plan: 'PREMIUM',
+          monto_mensual: 250000,
+          fecha_vencimiento: '2026-12-31',
         },
       ],
     });

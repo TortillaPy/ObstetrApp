@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, UserPlus, CalendarPlus, Clock, User, FileText, X, Stethoscope, Activity, FileStack, Plus, Play, Info } from 'lucide-react';
+import { 
+  Search, UserPlus, CalendarPlus, Clock, User, FileText, X, Stethoscope, 
+  Activity, FileStack, Plus, Play, Info, Crown, ShieldAlert, DollarSign, 
+  Users, CheckCircle, AlertTriangle, MessageSquare, Calendar, Sparkles, RefreshCw
+} from 'lucide-react';
 import { useAppContext } from '../components/AppContext';
 import { useAuthStore } from '../data/stores/useAuthStore';
 import { repositories } from '../lib/di';
+import { updateDoctorSubscription } from '../data/api/ApiRepositories';
 import { v4 as uuidv4 } from 'uuid';
 import { Cita, EstadoCita } from '../domain/entities/Cita';
 import { Paciente } from '../domain/entities/Paciente';
@@ -17,7 +22,7 @@ const TIME_SLOTS = [
 ];
 
 export function Dashboard() {
-  const { activePaciente, setActivePaciente, selectedDoctorId, setSelectedDoctorId, medicosList } = useAppContext();
+  const { activePaciente, setActivePaciente, selectedDoctorId, setSelectedDoctorId, medicosList, refreshMedicosList } = useAppContext();
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -55,6 +60,76 @@ export function Dashboard() {
   const [detailsModalTitle, setDetailsModalTitle] = useState('');
   const [detailsModalType, setDetailsModalType] = useState<'todas' | 'completadas' | 'embarazos'>('todas');
   const [activeEmbarazosList, setActiveEmbarazosList] = useState<any[]>([]);
+
+  // SaaS Admin Subscription Modal States
+  const [selectedSubDoctor, setSelectedSubDoctor] = useState<any | null>(null);
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [subForm, setSubForm] = useState({
+    estado_suscripcion: 'ACTIVO',
+    plan: 'PREMIUM',
+    fecha_vencimiento: '',
+    monto_mensual: '',
+    notas_admin: ''
+  });
+
+  // Confirmation Alert Modal State
+  const [showConfirmAlert, setShowConfirmAlert] = useState(false);
+  const [pendingSubAction, setPendingSubAction] = useState<(() => Promise<void>) | null>(null);
+  const [confirmAlertText, setConfirmAlertText] = useState('');
+
+  const abrirModalSuscripcion = (doc: any) => {
+    setSelectedSubDoctor(doc);
+    setSubForm({
+      estado_suscripcion: doc.estado_suscripcion || 'ACTIVO',
+      plan: doc.plan || 'PREMIUM',
+      fecha_vencimiento: doc.fecha_vencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      monto_mensual: doc.monto_mensual ? String(doc.monto_mensual) : '250000',
+      notas_admin: doc.notas_admin || ''
+    });
+    setShowSubModal(true);
+  };
+
+  const solicitarGuardarSuscripcion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSubDoctor) return;
+
+    const statusChanged = subForm.estado_suscripcion !== (selectedSubDoctor.estado_suscripcion || 'ACTIVO');
+    const planChanged = subForm.plan !== (selectedSubDoctor.plan || 'PREMIUM');
+
+    let alertMsg = `¿Confirmas guardar los cambios de suscripción para el Dr. ${selectedSubDoctor.nombre} ${selectedSubDoctor.apellido}?`;
+    
+    if (statusChanged || planChanged) {
+      alertMsg = `⚠️ CONFIRMACIÓN DE CAMBIO DE PLAN / ESTADO:\n\n` +
+                 `Está a punto de modificar la suscripción del Dr. ${selectedSubDoctor.nombre} ${selectedSubDoctor.apellido}:\n` +
+                 `• Nuevo Plan: ${subForm.plan}\n` +
+                 `• Nuevo Estado: ${subForm.estado_suscripcion}\n`;
+
+      if (subForm.estado_suscripcion === 'SUSPENDIDO') {
+        alertMsg += `\n⛔ ATENCIÓN: El médico perderá el acceso a la aplicación de inmediato hasta ser reactivado.`;
+      } else if (subForm.estado_suscripcion === 'PERMANENTE') {
+        alertMsg += `\n♾️ NOTA: El médico tendrá acceso vitalicio/permanente sin fecha de expiración.`;
+      }
+    }
+
+    setConfirmAlertText(alertMsg);
+    setPendingSubAction(() => async () => {
+      try {
+        await updateDoctorSubscription(selectedSubDoctor.id_usuario, {
+          estado_suscripcion: subForm.estado_suscripcion,
+          plan: subForm.plan,
+          fecha_vencimiento: subForm.estado_suscripcion === 'PERMANENTE' ? null : subForm.fecha_vencimiento,
+          monto_mensual: subForm.monto_mensual ? Number(subForm.monto_mensual) : null,
+          notas_admin: subForm.notas_admin
+        });
+        setShowSubModal(false);
+        setShowConfirmAlert(false);
+        await refreshMedicosList();
+      } catch (err: any) {
+        alert("Error al actualizar la suscripción: " + err.message);
+      }
+    });
+    setShowConfirmAlert(true);
+  };
 
   const parseTimeToMinutes = (timeStr: string) => {
     const [h, m] = timeStr.split(':').map(Number);
@@ -586,33 +661,384 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* ADMIN DOCTOR SELECTOR BANNER */}
-      {user?.rol === 'ADMIN' && (
-        <div className="bg-[#1E3A8A] text-white rounded-2xl p-4 md:p-5 shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-white shrink-0">
-              <Stethoscope className="w-5 h-5 text-blue-200" />
+      {/* MODAL: SAAS SUBSCRIPTION MANAGEMENT */}
+      {showSubModal && selectedSubDoctor && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-amber-500" />
+                <h3 className="font-bold tracking-tight text-slate-800 text-sm uppercase">Gestionar Suscripción — Dr. {selectedSubDoctor.nombre} {selectedSubDoctor.apellido}</h3>
+              </div>
+              <button onClick={() => setShowSubModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest block">Panel de Administración</span>
-              <h3 className="text-sm font-bold text-white">Médico Seleccionado (Consultas y Directorio)</h3>
+            <form onSubmit={solicitarGuardarSuscripcion} className="p-6 space-y-4">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* PLAN SELECTOR */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Plan de Suscripción *</label>
+                  <select
+                    value={subForm.plan}
+                    onChange={e => setSubForm({...subForm, plan: e.target.value})}
+                    className="border border-[#CBD5E1] rounded p-2 text-sm bg-white font-bold text-slate-800 focus:outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                  >
+                    <option value="ULTIMATE">🌟 ULTIMATE (Acceso Total & Prioridad)</option>
+                    <option value="PREMIUM">💎 PREMIUM (Completo + CLAP + PDF)</option>
+                    <option value="BASICO">📦 BÁSICO (Consultas SOAP)</option>
+                  </select>
+                </div>
+
+                {/* STATUS SELECTOR */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Estado de Suscripción *</label>
+                  <select
+                    value={subForm.estado_suscripcion}
+                    onChange={e => setSubForm({...subForm, estado_suscripcion: e.target.value})}
+                    className="border border-[#CBD5E1] rounded p-2 text-sm bg-white font-bold text-slate-800 focus:outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                  >
+                    <option value="PERMANENTE">♾️ PERMANENTE (Vitalicio / Sin Vencer)</option>
+                    <option value="ACTIVO">✅ ACTIVO (Al Día)</option>
+                    <option value="TRIAL">⏳ TRIAL (Período de Prueba)</option>
+                    <option value="PENDIENTE_PAGO">⚠️ PENDIENTE PAGO (Aviso)</option>
+                    <option value="SUSPENDIDO">🚫 SUSPENDIDO (Acceso Bloqueado)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* RENEWAL DATE */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Fecha Vencimiento</label>
+                  <input
+                    type="date"
+                    disabled={subForm.estado_suscripcion === 'PERMANENTE'}
+                    value={subForm.estado_suscripcion === 'PERMANENTE' ? '' : subForm.fecha_vencimiento}
+                    onChange={e => setSubForm({...subForm, fecha_vencimiento: e.target.value})}
+                    className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#1E3A8A] disabled:bg-slate-100 text-slate-800 font-medium"
+                  />
+                  {subForm.estado_suscripcion === 'PERMANENTE' && (
+                    <span className="text-[10px] text-amber-600 font-semibold">Ilimitado por estado permanente</span>
+                  )}
+                </div>
+
+                {/* MONTHLY FEE */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Monto Mensual (₲)</label>
+                  <input
+                    type="number"
+                    value={subForm.monto_mensual}
+                    onChange={e => setSubForm({...subForm, monto_mensual: e.target.value})}
+                    placeholder="Ej. 250000"
+                    className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#1E3A8A] text-slate-800 font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* QUICK RENEW BUTTONS */}
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Acceso Rápido de Renovación:</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() + 30);
+                      setSubForm({ ...subForm, fecha_vencimiento: d.toISOString().split('T')[0], estado_suscripcion: 'ACTIVO' });
+                    }}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    +30 Días (Renovar 1 Mes)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubForm({ ...subForm, estado_suscripcion: 'PERMANENTE', plan: 'ULTIMATE' });
+                    }}
+                    className="px-3 py-1.5 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    ♾️ Hacer Permanente
+                  </button>
+                </div>
+              </div>
+
+              {/* ADMIN NOTES */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Notas Internas de Administración</label>
+                <textarea
+                  rows={2}
+                  value={subForm.notas_admin}
+                  onChange={e => setSubForm({...subForm, notas_admin: e.target.value})}
+                  placeholder="Ej. Pago por transferencia bancaria recibido el 15/07..."
+                  className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#1E3A8A] text-slate-700 resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setShowSubModal(false)} className="flex-1 py-2.5 rounded-lg border border-[#CBD5E1] text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer">Cancelar</button>
+                <button type="submit" className="flex-1 py-2.5 rounded-lg bg-[#1E3A8A] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#172554] shadow-sm transition-colors cursor-pointer">Guardar Cambios</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRMATION ALERT DIALOG */}
+      {showConfirmAlert && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 print:hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-amber-300">
+            <div className="flex justify-between items-center p-5 border-b border-amber-200 bg-amber-50">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
+                <h3 className="font-extrabold tracking-tight text-amber-900 text-sm uppercase">Confirmación de Seguridad de Suscripción</h3>
+              </div>
+              <button onClick={() => setShowConfirmAlert(false)} className="text-amber-500 hover:text-amber-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="whitespace-pre-line text-sm text-slate-700 bg-amber-50/50 p-4 rounded-xl border border-amber-200 font-medium leading-relaxed mb-6">
+                {confirmAlertText}
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowConfirmAlert(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (pendingSubAction) await pendingSubAction();
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs uppercase tracking-wider shadow-md transition-colors cursor-pointer"
+                >
+                  Sí, Confirmar Cambio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SAAS ADMIN COMMAND CENTER */}
+      {user?.rol === 'ADMIN' && (
+        <div className="space-y-6 mb-8 print:hidden">
+          
+          {/* SAAS EXECUTIVE BANNER */}
+          <div className="bg-gradient-to-r from-[#1E3A8A] via-[#1E3A8A] to-[#2563EB] text-white rounded-2xl p-5 md:p-6 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-bold text-white shrink-0 shadow-inner">
+                <Crown className="w-6 h-6 text-amber-300" />
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold text-amber-300 uppercase tracking-widest block flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> ObstetrApp SaaS Command Center
+                </span>
+                <h3 className="text-lg font-extrabold text-white">Consola de Control de Suscripciones y Negocio</h3>
+                <p className="text-xs text-blue-200 mt-0.5">Gestione suscripciones, estados de pago y brinde soporte técnico directo a sus médicos.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 px-3 border border-white/20 flex items-center gap-2 w-full md:w-auto">
+                <Stethoscope className="w-4 h-4 text-blue-200 shrink-0" />
+                <div className="flex-1">
+                  <span className="text-[9px] font-bold text-blue-200 uppercase block">Modo Soporte Médico:</span>
+                  <select
+                    value={selectedDoctorId || ''}
+                    onChange={(e) => setSelectedDoctorId(e.target.value || null)}
+                    className="bg-white text-slate-800 font-extrabold text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm w-full"
+                  >
+                    {medicosList.map((doc) => (
+                      <option key={doc.id_usuario} value={doc.id_usuario}>
+                        Dr. {doc.nombre} {doc.apellido} ({doc.especialidad || 'Médico'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <label className="text-xs text-blue-200 font-semibold shrink-0">Filtrar por Médico:</label>
-            <select
-              value={selectedDoctorId || ''}
-              onChange={(e) => setSelectedDoctorId(e.target.value || null)}
-              className="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2.5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-64 cursor-pointer shadow-sm"
-            >
-              {medicosList.map((doc) => (
-                <option key={doc.id_usuario} value={doc.id_usuario}>
-                  Dr. {doc.nombre} {doc.apellido} ({doc.especialidad || 'Médico'})
-                </option>
-              ))}
-            </select>
+          {/* SAAS METRICS ROW */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Médicos Suscriptores Activos</span>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-3xl font-extrabold text-[#1E3A8A]">
+                  {medicosList.filter(m => m.rol === 'MEDICO' && (m.estado_suscripcion === 'ACTIVO' || m.estado_suscripcion === 'PERMANENTE' || !m.estado_suscripcion)).length}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">de {medicosList.filter(m => m.rol === 'MEDICO').length} médicos</span>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-teal-700 font-bold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-teal-600" /> Plataforma operativa
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Ingreso Mensual Recurrente (MRR)</span>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-2xl font-extrabold text-slate-800">
+                  ₲ {medicosList.filter(m => m.rol === 'MEDICO' && (m.estado_suscripcion === 'ACTIVO' || m.estado_suscripcion === 'PERMANENTE')).reduce((acc, m) => acc + (m.monto_mensual || 250000), 0).toLocaleString('es-PY')}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">/ mes</span>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-500 font-medium">
+                Estimado en cuotas activas
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Planes Ultimate / Permanent</span>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-3xl font-extrabold text-amber-600">
+                  {medicosList.filter(m => m.plan === 'ULTIMATE' || m.estado_suscripcion === 'PERMANENTE').length}
+                </span>
+                <span className="text-xs text-amber-700 font-bold">cuentas vitalicias</span>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-amber-600 font-bold flex items-center gap-1">
+                <Crown className="w-3 h-3 text-amber-500" /> Nivel VIP Sin Vencimiento
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Cuentas Suspendidas / Alertas</span>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-3xl font-extrabold text-rose-600">
+                  {medicosList.filter(m => m.estado_suscripcion === 'SUSPENDIDO' || m.estado_suscripcion === 'PENDIENTE_PAGO').length}
+                </span>
+                <span className="text-xs text-rose-600 font-medium">requieren atención</span>
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-rose-600 font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 text-rose-500" /> Control de acceso activo
+              </div>
+            </div>
           </div>
+
+          {/* DOCTORS SUBSCRIBERS TABLE */}
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center flex-wrap gap-4">
+              <div>
+                <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#1E3A8A]" /> Directorio de Médicos Suscriptores
+                </h4>
+                <p className="text-xs text-slate-500">Gestione planes, estado de cuotas y brinde soporte técnico prioritario.</p>
+              </div>
+              <Link to="/usuarios" className="px-3.5 py-2 bg-[#1E3A8A] text-white hover:bg-[#172554] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <Plus className="w-4 h-4" /> Agregar Médico
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm divide-y divide-slate-200">
+                <thead>
+                  <tr className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100">
+                    <th className="px-4 py-3">Médico / Contacto</th>
+                    <th className="px-4 py-3">Plan</th>
+                    <th className="px-4 py-3">Estado Suscripción</th>
+                    <th className="px-4 py-3">Vencimiento</th>
+                    <th className="px-4 py-3">Monto Mensual</th>
+                    <th className="px-4 py-3 text-right">Acciones de Control</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {medicosList.filter(m => m.rol === 'MEDICO').map(doc => {
+                    const status = doc.estado_suscripcion || 'ACTIVO';
+                    const plan = doc.plan || 'PREMIUM';
+                    const isPermanent = status === 'PERMANENTE';
+                    const fee = doc.monto_mensual || 250000;
+
+                    return (
+                      <tr key={doc.id_usuario} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-blue-100 border border-blue-200 text-[#1E3A8A] font-extrabold text-sm flex items-center justify-center shrink-0">
+                              {doc.nombre.charAt(0)}{doc.apellido.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-slate-800 text-xs">Dr. {doc.nombre} {doc.apellido}</p>
+                              <p className="text-[10px] text-slate-400 font-medium">{doc.email} • {doc.telefono || 'Sin tel.'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border inline-flex items-center gap-1 ${
+                            plan === 'ULTIMATE' ? 'bg-amber-50 text-amber-800 border-amber-300' :
+                            plan === 'PREMIUM' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-slate-100 text-slate-700 border-slate-300'
+                          }`}>
+                            {plan === 'ULTIMATE' && <Crown className="w-3 h-3 text-amber-500 fill-amber-300" />}
+                            {plan}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border inline-flex items-center gap-1 ${
+                            status === 'PERMANENTE' ? 'bg-purple-50 text-purple-700 border-purple-300' :
+                            status === 'ACTIVO' ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                            status === 'TRIAL' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                            status === 'PENDIENTE_PAGO' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            {status === 'PERMANENTE' && '♾️ PERMANENTE'}
+                            {status === 'ACTIVO' && '✅ ACTIVO'}
+                            {status === 'TRIAL' && '⏳ TRIAL'}
+                            {status === 'PENDIENTE_PAGO' && '⚠️ PENDIENTE PAGO'}
+                            {status === 'SUSPENDIDO' && '🚫 SUSPENDIDO'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-slate-700 font-medium">
+                          {isPermanent ? (
+                            <span className="text-purple-700 font-bold text-[11px]">Vitalicio (Sin vencimiento)</span>
+                          ) : doc.fecha_vencimiento ? (
+                            <span>{new Date(doc.fecha_vencimiento).toLocaleDateString('es-ES')}</span>
+                          ) : (
+                            <span className="text-slate-400 italic">No fijado</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 font-extrabold text-xs text-slate-800">
+                          ₲ {fee.toLocaleString('es-PY')}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <div className="flex gap-2 justify-end flex-wrap">
+                            <button
+                              onClick={() => abrirModalSuscripcion(doc)}
+                              className="px-2.5 py-1.5 bg-[#1E3A8A] hover:bg-[#172554] text-white text-[10px] font-extrabold rounded-lg uppercase transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              <Crown className="w-3 h-3 text-amber-300" /> Suscripción
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedDoctorId(doc.id_usuario);
+                                alert(`Modo soporte activado para Dr. ${doc.nombre} ${doc.apellido}. Ahora ves sus datos clínicos en la app.`);
+                              }}
+                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold rounded-lg uppercase transition-colors cursor-pointer border border-slate-300"
+                            >
+                              🎧 Asistir
+                            </button>
+                            {doc.telefono && (
+                              <a
+                                href={`https://wa.me/${doc.telefono.replace(/[^0-9]/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Chat de soporte WhatsApp"
+                              >
+                                <MessageSquare className="w-3 h-3" /> WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       )}
 
