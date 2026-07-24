@@ -98,13 +98,14 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciales inválidas o usuario inactivo' });
     }
 
-    if (user.rol !== 'ADMIN' && user.estado_suscripcion === 'SUSPENDIDO') {
-      return res.status(403).json({ error: 'Tu suscripción a ObstetrApp se encuentra suspendida o vencida. Por favor contacta a soporte técnico por WhatsApp.' });
-    }
-
+    // Verificar contraseña ANTES de revelar estado de suscripción (prevención de enumeración de cuentas)
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    if (user.rol !== 'ADMIN' && user.estado_suscripcion === 'SUSPENDIDO') {
+      return res.status(403).json({ error: 'Tu suscripción a ObstetrApp se encuentra suspendida o vencida. Por favor contacta a soporte técnico por WhatsApp.' });
     }
 
     const userPayload = formatUserPayload(user);
@@ -151,6 +152,11 @@ authRouter.get('/users', authMiddleware, adminOnlyMiddleware, async (req: Authen
         telefono: true,
         activo: true,
         createdAt: true,
+        estado_suscripcion: true,
+        fecha_vencimiento: true,
+        plan: true,
+        monto_mensual: true,
+        notas_admin: true,
       },
     });
     res.json(users);
