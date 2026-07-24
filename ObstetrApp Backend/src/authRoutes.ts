@@ -265,3 +265,10 @@ authRouter.patch('/users/:id/subscription', authMiddleware, adminOnlyMiddleware,
     res.status(500).json({ error: 'Error interno al actualizar la suscripción' });
   }
 });
+
+// Proteger borrado físico de usuarios desde la App Web (EXCLUSIVO PROVEEDOR DE SERVICIO / BASE DE DATOS)
+authRouter.delete('/users/:id', authMiddleware, adminOnlyMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  return res.status(403).json({
+    error: 'Acceso Protegido: La eliminación permanente de cuentas de usuarios se realiza exclusivamente desde el panel del proveedor de servicios de infraestructura (Supabase / PostgreSQL Cloud). Para dar de baja el acceso de un médico, utilice la opción "Desactivar Cuenta" o el estado "SUSPENDIDO".'
+  });
+});

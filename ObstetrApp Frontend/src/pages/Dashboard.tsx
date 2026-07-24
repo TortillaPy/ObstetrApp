@@ -852,7 +852,7 @@ export function Dashboard() {
                     onChange={(e) => setSelectedDoctorId(e.target.value || null)}
                     className="bg-white text-slate-800 font-extrabold text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm w-full"
                   >
-                    {medicosList.map((doc) => (
+                    {medicosList.filter(doc => doc.rol === 'MEDICO').map((doc) => (
                       <option key={doc.id_usuario} value={doc.id_usuario}>
                         Dr. {doc.nombre} {doc.apellido} ({doc.especialidad || 'Médico'})
                       </option>

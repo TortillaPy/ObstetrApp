@@ -102,10 +102,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const docs = users.filter(u => u.rol === 'MEDICO' || u.rol === 'ADMIN');
         setMedicosList(docs);
         if (docs.length > 0) {
-          const valid = docs.some(d => d.id_usuario === selectedDoctorId);
+          const valid = docs.some(d => d.id_usuario === selectedDoctorId && d.rol === 'MEDICO');
           if (!valid) {
-            const defaultDoc = docs.find(d => d.rol === 'MEDICO') || docs[0];
-            setSelectedDoctorId(defaultDoc.id_usuario);
+            const defaultDoc = docs.find(d => d.rol === 'MEDICO');
+            if (defaultDoc) setSelectedDoctorId(defaultDoc.id_usuario);
           }
         }
       }

@@ -241,7 +241,13 @@ export function Usuarios() {
         </div>
       )}
 
-      {/* Page Header */}
+      {/* Infrastructure Protection Banner */}
+      <div className="mb-4 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-900 text-xs flex items-center gap-3">
+        <Lock className="w-4 h-4 shrink-0 text-amber-700" />
+        <span>
+          <strong>Protección de Infraestructura:</strong> Para suspender el acceso de un médico suscriptor, utilice la opción <strong>"Desactivar Cuenta"</strong> o modifique su estado a <strong>"SUSPENDIDO"</strong>. La eliminación física de datos está restringida al portal del proveedor de servicios (PostgreSQL Cloud / Supabase).
+        </span>
+      </div>
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
