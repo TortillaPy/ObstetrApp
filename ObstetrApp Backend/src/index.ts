@@ -52,62 +52,6 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api', router);
 
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
-
-async function seedDefaultUsers() {
-  try {
-    const adminCount = await prisma.usuario.count({ where: { rol: 'ADMIN' } });
-    if (adminCount === 0) {
-      const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@obstetrapp.com';
-      const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'admin1234';
-      const doctorEmail = process.env.INITIAL_DOCTOR_EMAIL || 'doctor@obstetrapp.com';
-      const doctorPassword = process.env.INITIAL_DOCTOR_PASSWORD || 'doctor123';
-
-      console.log('🌱 Base de datos limpia detectada. Creando cuentas iniciales desde variables de entorno...');
-      const adminPassHash = await bcrypt.hash(adminPassword, 10);
-      const doctorPassHash = await bcrypt.hash(doctorPassword, 10);
-
-      await prisma.usuario.createMany({
-        data: [
-          {
-            email: adminEmail,
-            password_hash: adminPassHash,
-            nombre: 'Administrador',
-            apellido: 'Sistema',
-            rol: 'ADMIN',
-            especialidad: 'Administración Clínica',
-            registro_prof: 'ADM-001',
-            nombre_clinica: 'ObstetrApp Central',
-            direccion: 'Asunción, Paraguay',
-            telefono: '+595 985 944757',
-            activo: true,
-          },
-          {
-            email: doctorEmail,
-            password_hash: doctorPassHash,
-            nombre: 'Ana',
-            apellido: 'Mendoza',
-            rol: 'MEDICO',
-            especialidad: 'Ginecología y Obstetricia',
-            registro_prof: 'Rg. Prof. 12345',
-            nombre_clinica: 'Atención Médica Integral',
-            direccion: 'Av. España 1450 e/ Pitiantuta, Asunción',
-            telefono: '+595 985 000000',
-            activo: true,
-          },
-        ],
-      });
-      console.log(`✅ Cuentas iniciales (${adminEmail} / ${doctorEmail}) creadas exitosamente.`);
-    }
-  } catch (e) {
-    console.error('Error al sembrar cuentas predeterminadas:', e);
-  }
-}
-
-app.listen(PORT, async () => {
-  await seedDefaultUsers();
+app.listen(PORT, () => {
   console.log(`🔒 ObstetrApp Secure API corriendo en puerto ${PORT}`);
 });
