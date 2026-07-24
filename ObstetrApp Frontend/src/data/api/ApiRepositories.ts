@@ -28,6 +28,15 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
     authHeaders['Authorization'] = `Bearer ${token}`;
   }
 
+  // Interceptar operaciones de escritura en paciente Mock para proteger la BD real
+  if (options?.body && (options.body.toString().includes('9999999-MOCK') || options.body.toString().includes('mock-emb-001'))) {
+    if (options.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method.toUpperCase())) {
+      console.log('ℹ️ MODO GUÍA: Operación simulada en paciente mock de prueba.');
+      alert('ℹ️ MODO GUÍA DE REFERENCIA Y ASISTENCIA TÉCNICA:\n\nAcción simulada exitosamente con la paciente de prueba (Mock).\nLa base de datos real del médico se mantiene 100% intacta e inalterada.');
+      return { success: true, message: 'Operación simulada en modo demo' };
+    }
+  }
+
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {

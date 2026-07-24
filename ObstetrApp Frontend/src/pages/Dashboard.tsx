@@ -22,7 +22,7 @@ const TIME_SLOTS = [
 ];
 
 export function Dashboard() {
-  const { activePaciente, setActivePaciente, selectedDoctorId, setSelectedDoctorId, medicosList, refreshMedicosList } = useAppContext();
+  const { activePaciente, setActivePaciente, selectedDoctorId, setSelectedDoctorId, medicosList, refreshMedicosList, loadMockDemoPatient } = useAppContext();
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -1012,11 +1012,14 @@ export function Dashboard() {
                             <button
                               onClick={() => {
                                 setSelectedDoctorId(doc.id_usuario);
-                                alert(`Modo soporte activado para Dr. ${doc.nombre} ${doc.apellido}. Ahora ves sus datos clínicos en la app.`);
+                                loadMockDemoPatient();
+                                alert(`🎧 MODO ASISTENCIA TÉCNICA Y GUÍA DEMO ACTIVADO:\n\n` +
+                                      `Se ha cargado la paciente de prueba "María Elena (MOCK DE REFERENCIA)" para el Dr. ${doc.nombre} ${doc.apellido}.\n\n` +
+                                      `Todos los menús clínicos (Consulta SOAP, Perinatal CLAP, Recetas, Estudios, Historial) han sido desbloqueados para tu navegación sin alterar la base de datos real del médico.`);
                               }}
-                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold rounded-lg uppercase transition-colors cursor-pointer border border-slate-300"
+                              className="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 text-[10px] font-extrabold rounded-lg uppercase transition-colors cursor-pointer border border-amber-500 shadow-sm"
                             >
-                              🎧 Asistir
+                              🎧 Asistir (Guía Mock)
                             </button>
                             {doc.telefono && (
                               <a

@@ -22,6 +22,38 @@ export interface DoctorUser {
   notas_admin?: string | null;
 }
 
+export const MOCK_PATIENT_DEMO: Paciente = {
+  cedula_id: '9999999-MOCK',
+  nombre: 'María Elena (MOCK DE REFERENCIA)',
+  apellido: 'Benítez',
+  domicilio: 'Av. Mcal. López 1230, Asunción',
+  telefono: '+595 981 000111',
+  localidad: 'Asunción',
+  fecha_nacimiento: '1995-04-12',
+  edad: 31,
+  etnia: 'mestiza',
+  estudios_nivel: 'universitaria',
+  estudios_alfabetiza: 1,
+  estado_civil: 'casada',
+  vive_sola: 0,
+  menor_15_mayor_35: 0,
+};
+
+export const MOCK_EMBARAZO_DEMO: Embarazo = {
+  id_embarazo: 'mock-emb-001',
+  cedula_id: '9999999-MOCK',
+  fum: '2026-01-15',
+  fpp: '2026-10-22',
+  dudas_fum: 0,
+  eg_confiada: 1,
+  eco_fum: '2026-02-20',
+  antipaludico: 0,
+  carne: 1,
+  estado: 'activo',
+  createdAt: '2026-01-15T00:00:00Z',
+  updatedAt: '2026-01-15T00:00:00Z'
+};
+
 interface AppContextType {
   activePaciente: Paciente | null;
   setActivePaciente: (paciente: Paciente | null) => void;
@@ -31,6 +63,7 @@ interface AppContextType {
   setSelectedDoctorId: (id: string | null) => void;
   medicosList: DoctorUser[];
   refreshMedicosList: () => Promise<void>;
+  loadMockDemoPatient: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -89,6 +122,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, token]);
 
+  const loadMockDemoPatient = () => {
+    setActivePacienteState(MOCK_PATIENT_DEMO);
+    setActiveEmbarazo(MOCK_EMBARAZO_DEMO);
+  };
+
   const setActivePaciente = (paciente: Paciente | null) => {
     setActivePacienteState(paciente);
     if (!paciente) {
@@ -98,8 +136,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshActiveEmbarazo = async () => {
     if (activePaciente) {
-      const embarazo = await repositories.embarazos.getActiveByCedulaId(activePaciente.cedula_id);
-      setActiveEmbarazo(embarazo);
+      if (activePaciente.cedula_id === MOCK_PATIENT_DEMO.cedula_id) {
+        setActiveEmbarazo(MOCK_EMBARAZO_DEMO);
+      } else {
+        const embarazo = await repositories.embarazos.getActiveByCedulaId(activePaciente.cedula_id);
+        setActiveEmbarazo(embarazo);
+      }
     } else {
       setActiveEmbarazo(null);
     }
@@ -113,9 +155,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const saved = sessionStorage.getItem('activePacienteCedula');
     if (saved) {
-      repositories.pacientes.getById(saved).then((p) => {
-        if (p) setActivePacienteState(p);
-      });
+      if (saved === MOCK_PATIENT_DEMO.cedula_id) {
+        setActivePacienteState(MOCK_PATIENT_DEMO);
+      } else {
+        repositories.pacientes.getById(saved).then((p) => {
+          if (p) setActivePacienteState(p);
+        });
+      }
     }
   }, []);
 
@@ -136,7 +182,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       selectedDoctorId,
       setSelectedDoctorId,
       medicosList,
-      refreshMedicosList
+      refreshMedicosList,
+      loadMockDemoPatient
     }}>
       {children}
     </AppContext.Provider>
