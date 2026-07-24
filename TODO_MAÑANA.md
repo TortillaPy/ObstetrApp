@@ -13,23 +13,22 @@ Este documento contiene la hoja de ruta actualizada, el estado de las tareas del
    - Tarjetas de **Peso Preconcepcional** y **Última Consulta** en la ficha Bento del Historial Clínico con variación automática (**`+4.5 kg`**).
 
 3. **Impresiones PDF Membretadas y Personalizadas:**
-   - El encabezado de impresión (`PrintHeader.tsx`) y los sellos de firma en Recetas, Reposos, Órdenes de Laboratorio e Historial Clínico ahora consumen los datos reales del médico en sesión (**Nombre**, **Especialidad**, **Registro Profesional**, **Nombre de Clínica** y **Dirección de Consultorio**).
+   - El encabezado de impresión (`PrintHeader.tsx`) y los sellos de firma en Recetas, Reposos, Órdenes de Laboratorio e Historial Clínico consumen los datos reales del médico en sesión (**Nombre**, **Especialidad**, **Registro Profesional**, **Nombre de Clínica** y **Dirección de Consultorio**).
 
 4. **Módulo de Administración de Médicos (`/usuarios`):**
    - Pantalla exclusiva para Administradores donde se pueden crear médicos, asignar su dirección de consultorio y matrícula, activar/desactivar accesos y restablecer contraseñas.
 
-5. **Canal de Soporte Directo por WhatsApp (+595 985 944757):**
-   - Integración directa en la pantalla de inicio de sesión (`/login`) para asistencia técnica.
-
-6. **Hardening de Ciberseguridad & Aislamiento de Cartera:**
-   - **Rate Limiting:** `skipSuccessfulRequests: true` en la API de Login.
+5. **Hardening de Ciberseguridad & Aislamiento de Cartera:**
+   - **Rate Limiting:** `skipSuccessfulRequests: true` y `trust proxy` activado en Express para proxy Nginx.
    - **Cabeceras HTTP con Helmet:** Protección XSS, Clickjacking e inspección MIME.
+   - **Cero Credenciales Expuestas:** Cuentas iniciales generadas desde variables de entorno `.env` en lugar de código fuente.
    - **Aislamiento por Médico:** Filtro estricto por `medico_id` en todas las rutas clínicas.
    - **Filtrado Admin en Dashboard y Directorio:** Los usuarios administradores pueden alternar el filtro por médico tratante.
 
-7. **Infraestructura de Despliegue en Producción (Docker):**
-   - Configuración de `docker-compose.yml` orquestando PostgreSQL 15, Backend Express y Frontend Nginx (con proxy inverso `/api/`).
-   - Construcción de Dockerfiles multietapa y soporte de esquemas PostgreSQL (`schema.postgresql.prisma`).
+6. **Infraestructura de Despliegue en Producción (Docker & Nginx):**
+   - Configuración de `docker-compose.yml` orquestando PostgreSQL 15, Backend Express y Frontend Nginx (con proxy inverso `/api/` y timeouts de 60s).
+   - Compatibilidad nativa con Alpine Linux y OpenSSL 3.0 (`apk add --no-cache openssl` y `linux-musl-openssl-3.0.x`).
+   - Sistema de siembra automática compilado en TypeScript (`src/seed.ts` → `dist/seed.js`) integrado en el arranque con reintentos para PostgreSQL.
 
 ---
 
@@ -47,11 +46,14 @@ Este documento contiene la hoja de ruta actualizada, el estado de las tareas del
 ## 🐳 3. Despliegue Rápido en Docker
 
 ```bash
-# Copiar plantilla de entorno
+# 1. Copiar plantilla de entorno
 cp .env.production.example .env
 
-# Levantar contenedores (Linux / macOS / Windows)
-docker compose up -d --build
+# 2. Levantar contenedores (Linux / macOS / Windows)
+sudo docker compose up -d --build
+
+# 3. (Opcional) Ejecutar siembra manual si la base de datos es nueva:
+sudo docker compose exec backend node dist/seed.js
 ```
 
 ---

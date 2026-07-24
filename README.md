@@ -80,7 +80,12 @@ npm run dev
    sudo docker compose up -d --build
    ```
 
-4. **Verificar Estado de Servicios:**
+4. **(Opcional) Siembra Manual de Datos Iniciales:**
+   ```bash
+   sudo docker compose exec backend node dist/seed.js
+   ```
+
+5. **Verificar Estado de Servicios:**
    ```bash
    sudo docker compose ps
    sudo docker compose logs -f
