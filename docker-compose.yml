@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. Base de Datos PostgreSQL
   db:
@@ -23,7 +21,7 @@ services:
   # 2. Servidor Backend API Express
   backend:
     build:
-      context: ./"ObstetrApp Backend"
+      context: './ObstetrApp Backend'
       dockerfile: Dockerfile
     container_name: obstetrapp_backend
     restart: always
@@ -42,7 +40,7 @@ services:
   # 3. Servidor Frontend Nginx + Single Page Application (SPA)
   frontend:
     build:
-      context: ./"ObstetrApp Frontend"
+      context: './ObstetrApp Frontend'
       dockerfile: Dockerfile
     container_name: obstetrapp_frontend
     restart: always
