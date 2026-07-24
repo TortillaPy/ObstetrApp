@@ -9,11 +9,8 @@ if [ -n "$DATABASE_URL" ] && echo "$DATABASE_URL" | grep -qE "postgres(ql)?://";
   cp prisma/schema.postgresql.prisma prisma/schema.prisma
 fi
 
-echo "🔄 Generando cliente Prisma..."
-npx prisma generate
-
 echo "🗄️ Sincronizando esquema de base de datos..."
-npx prisma db push
+npx prisma db push --skip-generate
 
 echo "🌱 Ejecutando siembra inicial de la base de datos..."
 node dist/seed.js || true

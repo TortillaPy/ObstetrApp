@@ -11,7 +11,8 @@ RUN npm install --legacy-peer-deps
 # Copiar código fuente
 COPY . .
 
-# Compilar código TypeScript a JavaScript (dist/)
+# Preparar Prisma y compilar TypeScript
+RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate
 RUN npm run build
 
 # Exponer puerto Express
