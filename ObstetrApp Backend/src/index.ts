@@ -52,6 +52,57 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api', router);
 
-app.listen(PORT, () => {
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+async function seedDefaultUsers() {
+  try {
+    const adminCount = await prisma.usuario.count({ where: { rol: 'ADMIN' } });
+    if (adminCount === 0) {
+      console.log('🌱 Base de datos limpia detectada. Creando cuentas predeterminadas...');
+      const adminPassHash = await bcrypt.hash('admin1234', 10);
+      const doctorPassHash = await bcrypt.hash('doctor123', 10);
+
+      await prisma.usuario.createMany({
+        data: [
+          {
+            email: 'admin@obstetrapp.com',
+            password_hash: adminPassHash,
+            nombre: 'Administrador',
+            apellido: 'Sistema',
+            rol: 'ADMIN',
+            especialidad: 'Administración Clínica',
+            registro_prof: 'ADM-001',
+            nombre_clinica: 'ObstetrApp Central',
+            direccion: 'Asunción, Paraguay',
+            telefono: '+595 985 944757',
+            activo: true,
+          },
+          {
+            email: 'doctor@obstetrapp.com',
+            password_hash: doctorPassHash,
+            nombre: 'Ana',
+            apellido: 'Mendoza',
+            rol: 'MEDICO',
+            especialidad: 'Ginecología y Obstetricia',
+            registro_prof: 'Rg. Prof. 12345',
+            nombre_clinica: 'Atención Médica Integral',
+            direccion: 'Av. España 1450 e/ Pitiantuta, Asunción',
+            telefono: '+595 985 000000',
+            activo: true,
+          },
+        ],
+      });
+      console.log('✅ Cuentas predeterminadas (admin@obstetrapp.com y doctor@obstetrapp.com) creadas exitosamente.');
+    }
+  } catch (e) {
+    console.error('Error al sembrar cuentas predeterminadas:', e);
+  }
+}
+
+app.listen(PORT, async () => {
+  await seedDefaultUsers();
   console.log(`🔒 ObstetrApp Secure API corriendo en puerto ${PORT}`);
 });
