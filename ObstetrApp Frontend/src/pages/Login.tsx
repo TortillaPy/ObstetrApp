@@ -18,17 +18,21 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const apiBase = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
+      const apiBase = (import.meta.env.VITE_API_URL as string) || '/api';
       const res = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
+        throw new Error(data.error || `Error al iniciar sesión (${res.status})`);
       }
 
       setAuth(data.user, data.token);

@@ -53,16 +53,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
         
         // Fetch latest profile from backend
-        const apiBase = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
+        const apiBase = (import.meta.env.VITE_API_URL as string) || '/api';
         const res = await fetch(`${apiBase}/auth/me`, {
           headers: { 'Authorization': `Bearer ${savedToken}` },
         });
 
-        if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
           localStorage.setItem('obstetrapp_user', JSON.stringify(data.user));
           set({ user: data.user, token: savedToken, isAuthenticated: true, isLoading: false });
-        } else {
+        } else if (!res.ok) {
           localStorage.removeItem('obstetrapp_token');
           localStorage.removeItem('obstetrapp_user');
           set({ user: null, token: null, isAuthenticated: false, isLoading: false });

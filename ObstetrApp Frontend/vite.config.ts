@@ -15,6 +15,13 @@ export default defineConfig(() => {
       dedupe: ['react', 'react-dom'],
     },
     server: {
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      },
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },

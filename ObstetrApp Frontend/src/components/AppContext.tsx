@@ -50,11 +50,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const apiBase = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
+      const apiBase = (import.meta.env.VITE_API_URL as string) || '/api';
       const res = await fetch(`${apiBase}/auth/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const users: DoctorUser[] = await res.json();
         const docs = users.filter(u => u.rol === 'MEDICO' || u.rol === 'ADMIN');
         setMedicosList(docs);

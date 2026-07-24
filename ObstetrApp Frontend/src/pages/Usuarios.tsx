@@ -54,7 +54,7 @@ export function Usuarios() {
     rol: 'MEDICO' as 'MEDICO' | 'ADMIN',
   });
 
-  const apiBase = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
+  const apiBase = (import.meta.env.VITE_API_URL as string) || '/api';
 
   useEffect(() => {
     if (isAuthLoading) return;

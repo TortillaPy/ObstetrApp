@@ -19,7 +19,7 @@ import { Receta } from '../../domain/entities/Receta';
 import { Reposo } from '../../domain/entities/Reposo';
 import { SolicitudLaboratorio } from '../../domain/entities/SolicitudLaboratorio';
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
+const API_BASE = (import.meta.env.VITE_API_URL as string) || '/api';
 
 async function fetchApi(endpoint: string, options?: RequestInit) {
   const token = localStorage.getItem('obstetrapp_token');
@@ -36,15 +36,30 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
       ...options?.headers,
     },
   });
+
   if (!res.ok) {
     if (res.status === 401) {
       localStorage.removeItem('obstetrapp_token');
       localStorage.removeItem('obstetrapp_user');
     }
     if (res.status === 404) return null;
-    throw new Error(`API Error: ${res.statusText}`);
+
+    let errorMsg = `Error del servidor (${res.status})`;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        const errData = await res.json();
+        if (errData?.error) errorMsg = errData.error;
+      } catch {}
+    }
+    throw new Error(errorMsg);
   }
-  return res.json();
+
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+  return null;
 }
 
 export class PacienteApiRepository implements IPacienteRepository {
