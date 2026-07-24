@@ -2,9 +2,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar definiciones de paquetes e instalar dependencias
+# Configurar variables de entorno
+ENV NODE_ENV=production
+
+# 1. Instalar sistema de archivos seguros para npm (https://docs.npmjs.com/cli/v10/configuring-npm/npmrc#package-lock-only)
+RUN npm config set package-lock-only true
+
+# 2. Copiar archivos de paquetes y dependencias (sin lockfile por ahora)
 COPY package*.json ./
-RUN npm ci
+
+# 3. Limpiar caché de npm para reducir el tamaño de la imagen
+RUN npm cache clean --force
+
+# 4. Instalar dependencias de producción (sin devDependencies)
+RUN npm install --omit=dev --omit=optional
 
 # Copiar código fuente
 COPY . .

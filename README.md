@@ -4,204 +4,269 @@
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-orange?style=for-the-badge)
 ![Access](https://img.shields.io/badge/Access-Private_Commission-blueviolet?style=for-the-badge)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ---
 
-## ⚡ Guía Rápida: Ejecución Local y Despliegue
+## 🌐 Language Selection / Selección de Idioma / Seleção de Idioma
 
-### 💻 1. Configuración y Ejecución Local (Local Development)
+- 🇪🇸 [Español (Guía de Inicio y Despliegue Docker)](#-español)
+- 🇬🇧 [English (Getting Started & Docker Deployment)](#-english)
+- 🇵🇹 [Português (Guia de Início e Implantação Docker)](#-português)
 
-Sigue estos pasos para clonar y ejecutar el proyecto en tu entorno local de desarrollo:
+---
+
+# 🇪🇸 Español
+
+## ⚡ Guía de Instalación y Ejecución
+
+### 💻 1. Ejecución Local en Desarrollo (Local Development)
 
 #### **Requisitos Previos**
-- **Node.js**: v18.0.0 o superior
-- **NPM**: v9.0.0 o superior (Soporte Monorepo Workspaces)
-- **Git**
+- Node.js (v18 o superior)
+- NPM (v9 o superior)
+- Git
 
-#### **Paso 1: Clonar el Repositorio e Instalar Dependencias**
+#### **Pasos**
 ```bash
-git clone https://github.com/tu-usuario/ObstetrApp.git
+# 1. Clonar el repositorio
+git clone https://github.com/TortillaPy/ObstetrApp.git
 cd ObstetrApp
 
-# Instala todas las dependencias del monorepo (Backend + Frontend)
+# 2. Instalar dependencias del monorepo
 npm install
-```
 
-#### **Paso 2: Configurar las Variables de Entorno (`.env`)**
-
-1. **Backend (`ObstetrApp Backend/.env`):**
-```bash
+# 3. Configurar variables de entorno
 cp "ObstetrApp Backend/.env.example" "ObstetrApp Backend/.env"
-```
-*Asegúrate de tener en `ObstetrApp Backend/.env`:*
-```env
-PORT=3001
-NODE_ENV=development
-DATABASE_URL="file:./dev.db"
-CORS_ORIGIN="http://localhost:3000,http://localhost:5173"
-JWT_SECRET="super_secreto_obstetrapp_local_2026"
-```
-
-2. **Frontend (`ObstetrApp Frontend/.env`):**
-```bash
 cp "ObstetrApp Frontend/.env.example" "ObstetrApp Frontend/.env"
-```
-*Verifica en `ObstetrApp Frontend/.env`:*
-```env
-VITE_API_URL="http://localhost:3001/api"
-```
 
-#### **Paso 3: Inicializar la Base de Datos con Prisma**
-```bash
+# 4. Inicializar base de datos SQLite local
 cd "ObstetrApp Backend"
 npx prisma db push
 npx prisma generate
 cd ..
-```
 
-#### **Paso 4: Iniciar el Servidor de Desarrollo**
-Ejecuta el siguiente comando en la raíz del proyecto para arrancar backend y frontend simultáneamente:
-```bash
+# 5. Ejecutar aplicación en desarrollo (Backend en :3001, Frontend en :3000)
 npm run dev
 ```
-- 🌐 **Frontend App**: [http://localhost:3000](http://localhost:3000)
-- ⚙️ **Backend API**: [http://localhost:3001](http://localhost:3001)
-
-#### **Credenciales por Defecto para Pruebas Local:**
-- **Cuenta Administrador:** `admin@obstetrapp.com` / `admin1234`
-- **Cuenta Médico:** `doctor@obstetrapp.com` / `doctor123`
 
 ---
 
-### 🐳 2. Despliegue en Producción y Docker (Production Deployment)
+### 🐳 2. Despliegue con Docker por Sistema Operativo
 
-Para desplegar la aplicación en un servidor VPS (Ubuntu/Debian) o entorno de producción usando **Docker y PostgreSQL**:
+#### 🐧 **A. Linux (Ubuntu / Debian / CentOS / VPS)**
 
-#### **Opción A: Despliegue con Docker Compose (Recomendado)**
-
-1. **Configurar Variables de Entorno de Producción (`.env` en raíz):**
-```env
-# Base de Datos PostgreSQL
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=una_clave_segura_de_db
-POSTGRES_DB=obstetrapp_db
-
-# Backend API
-NODE_ENV=production
-PORT=3001
-DATABASE_URL=postgresql://admin:una_clave_segura_de_db@postgres:5432/obstetrapp_db?schema=public
-JWT_SECRET=ingresa_aqui_una_clave_jwt_secreta_y_larga_de_minimo_32_caracteres
-CORS_ORIGIN=https://tu-dominio.com
-
-# Frontend
-VITE_API_URL=https://tu-dominio.com/api
-```
-
-2. **Construir y Levantar Contenedores:**
-```bash
-docker-compose up -d --build
-```
-
-3. **Ejecutar Migraciones de Base de Datos en Producción:**
-```bash
-docker-compose exec backend npx prisma db push
-```
-
-#### **Opción B: Despliegue Manual (Node.js + Nginx + PostgreSQL)**
-1. **Compilar Frontend:**
+1. **Instalar Docker y Docker Compose:**
    ```bash
-   npm run build --workspace="ObstetrApp Frontend"
+   sudo apt update && sudo apt install -y docker.io docker-compose-v2
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker $USER
+   newgrp docker
    ```
-   Sirve el directorio `ObstetrApp Frontend/dist` utilizando Nginx configurado con SSL/TLS (Let's Encrypt / Certbot).
-2. **Compilar e Iniciar Backend:**
+
+2. **Configurar Entorno de Producción:**
    ```bash
-   npm run build --workspace="ObstetrApp Backend"
-   NODE_ENV=production JWT_SECRET=tu_secreto npm run start --workspace="ObstetrApp Backend"
+   cp .env.production.example .env
+   # Edita .env con tus claves: POSTGRES_PASSWORD, JWT_SECRET, etc.
    ```
-   Utiliza `PM2` o un servicio de `systemd` para mantener el proceso Node.js activo de forma persistente.
+
+3. **Construir y Levantar Contenedores:**
+   ```bash
+   sudo docker compose up -d --build
+   ```
+
+4. **Verificar Estado de Servicios:**
+   ```bash
+   sudo docker compose ps
+   sudo docker compose logs -f
+   ```
 
 ---
 
-## 📋 Tabla de Contenidos
+#### 🪟 **B. Windows (Docker Desktop + WSL2 / PowerShell / Git Bash)**
 
-- [⚡ Guía Rápida: Ejecución Local y Despliegue](#-guía-rápida-ejecución-local-y-despliegue)
-- [🔍 Resumen Ejecutivo](#-resumen-ejecutivo)
-- [✨ Módulos Clínicos y Funcionalidades](#-módulos-clínicos-y-funcionalidades)
-- [🛡️ Ciberseguridad y Protección de Datos](#️-ciberseguridad-y-protección-de-datos)
-- [🏗️ Arquitectura y Monorepo](#️-arquitectura-y-monorepo)
-- [📁 Estructura del Proyecto](#-estructura-del-proyecto)
+1. **Requisitos Previos:**
+   - Instalar **Docker Desktop para Windows** (con backend WSL2 habilitado).
+   - Abrir **PowerShell** o **Git Bash** como Administrador.
 
----
+2. **Pasos de Despliegue:**
+   ```powershell
+   # En PowerShell / Git Bash dentro de la carpeta del proyecto:
+   Copy-Item .env.production.example .env
+   
+   # Levantar los contenedores:
+   docker compose up -d --build
+   ```
 
-## 🔍 Resumen Ejecutivo
-
-**ObstetrApp** satisface de extremo a extremo las necesidades de consulta clínica obstétrica y ginecológica. El sistema integra el carné perinatal estándar de la OPS/CLAP, cálculo automático de semanas de gestación (EG) y Fecha Probable de Parto (FPP), consultas ambulatorias SOAP, ecografías, Papanicolaou, control de agendas diarias, emisión de recetas/reposos en formato PDF e historial clínico panorámico bento-grid.
-
-Además, cuenta con un esquema de seguridad de datos de pacientes por cartera de médico y administración centralizada de usuarios.
-
----
-
-## ✨ Módulos Clínicos y Funcionalidades
-
-### 1. 🎛️ Centro de Comando (Dashboard)
-- **Paciente Activo**: Muestra a la paciente seleccionada en sesión, detalles del próximo turno y botones de acción rápida hacia los módulos médicos.
-- **Agenda del Día**: Lista cronológica de turnos del día con cambio de estado ("Pendiente" / "Realizada") a un solo clic.
-- **Registro Exprés**: Alta de pacientes de emergencia directo en la ventana de agendamiento.
-
-### 2. 🗂️ Directorio de Pacientes
-- **Búsqueda en Tiempo Real**: Filtrado dinámico por Cédula de Identidad, Nombre o Apellido.
-- **Identificación de Riesgo**: Alerta visual automática para pacientes de riesgo obstétrico (<15 o >35 años).
-- **Ficha Integral**: Datos demográficos, grupo sanguíneo/Rh, menarca, FUM, ritmo menstrual y método anticonceptivo.
-
-### 3. 📝 Consulta General (SOAP, Ecografía y PAP)
-- **Metodología SOAP**: Subjetivo (síntomas), Objetivo (signos vitales y examen físico), Apreciación (diagnóstico) y Plan (tratamiento).
-- **Registro Ecográfico**: Peso fetal estimado (PFE), Índice de Líquido Amniótico (ILA) y diagnóstico ecográfico.
-- **Colposcopía y Papanicolaou**: Registro macroscópico, clasificación de Bethesda y observaciones.
-
-### 4. 🤰 Historia Perinatal (Estándar CLAP)
-- **Calculadora FPP/EG**: Cálculo dinámico por regla de Naegele.
-- **Pestañas CLAP**: Antecedentes obstétricos (G:P:C:A), vacunas, exámenes de laboratorio (<20s y >20s) y controles evolutivos.
-
-### 5. 🏥 Consulta Ginecológica
-- Antecedentes ginecológicos, registro de síntomas (dismenorrea, dispareunia, sangrado anormal) y examen físico especializado (mamas, especuloscopía y tacto bimanual).
-
-### 6. 🛡️ Módulo de Administración de Médicos (`/usuarios`)
-- **Acceso Exclusivo ADMIN**: Creación y edición de cuentas de médicos.
-- **Datos de Consultorio para PDF**: Registro de Matrícula Profesional, Nombre de Clínica, Dirección de Consultorio y Teléfono por cada médico para estirar automáticamente en recetas y certificados.
-- **Control de Accesos**: Interruptor de activación/desactivación de cuentas y restablecimiento de contraseña.
-
-### 7. 📲 Soporte por WhatsApp (+595 985 944757)
-- Integración en la pantalla de inicio de sesión (`/login`) para asistencia técnica o solicitud de alta de cuenta de médico.
+3. **Acceso a la Aplicación:**
+   - Navegador: [http://localhost](http://localhost)
 
 ---
 
-## 🛡️ Ciberseguridad y Protección de Datos
+#### 🍎 **C. macOS (Apple Silicon M1/M2/M3 e Intel)**
 
-- **Protección contra Fuerza Bruta**: Rate limiting activo en `/api/auth/login` (máximo 5 intentos por IP en 15 minutos).
-- **Cabeceras HTTP de Seguridad (Helmet.js)**: Protección contra ataques XSS, Clickjacking, MIME Sniffing y eliminación del encabezado `X-Powered-By`.
-- **Encriptación de Contraseñas**: Bcryptjs con 10 rondas de hashing.
-- **Validación Estricta de JWT**: El servidor requiere `JWT_SECRET` explícito en producción para evitar claves por defecto.
-- **Inmunidad SQL**: Consultas con sintaxis parametrizada abstraídas por Prisma ORM.
+1. **Requisitos Previos:**
+   - Instalar **Docker Desktop para Mac**.
+
+2. **Pasos de Despliegue:**
+   ```bash
+   cp .env.production.example .env
+   docker compose up -d --build
+   ```
+
+3. **Verificar Estado:**
+   ```bash
+   docker compose ps
+   ```
 
 ---
 
-## 🏗️ Arquitectura y Monorepo
+### 🔑 Credenciales por Defecto (Entorno de Pruebas):
+- **Administrador:** `admin@obstetrapp.com` / `admin1234`
+- **Médico:** `doctor@obstetrapp.com` / `doctor123`
 
+---
+
+# 🇬🇧 English
+
+## ⚡ Getting Started & Deployment Guide
+
+### 💻 1. Local Development Setup
+
+#### **Prerequisites**
+- Node.js (v18 or higher)
+- NPM (v9 or higher)
+- Git
+
+#### **Steps**
+```bash
+# 1. Clone repository
+git clone https://github.com/TortillaPy/ObstetrApp.git
+cd ObstetrApp
+
+# 2. Install workspace dependencies
+npm install
+
+# 3. Setup environment files
+cp "ObstetrApp Backend/.env.example" "ObstetrApp Backend/.env"
+cp "ObstetrApp Frontend/.env.example" "ObstetrApp Frontend/.env"
+
+# 4. Initialize local SQLite database
+cd "ObstetrApp Backend"
+npx prisma db push
+npx prisma generate
+cd ..
+
+# 5. Start dev server (Backend on :3001, Frontend on :3000)
+npm run dev
 ```
-ObstetrApp Monorepo
- ├── ObstetrApp Backend   (Express + Prisma ORM + JWT + Helmet)
- └── ObstetrApp Frontend  (React 19 + TypeScript + Vite + TailwindCSS v4)
+
+---
+
+### 🐳 2. OS-Specific Docker Deployment Guide
+
+#### 🐧 **A. Linux (Ubuntu / Debian / Cloud VPS)**
+
+1. **Install Docker:**
+   ```bash
+   sudo apt update && sudo apt install -y docker.io docker-compose-v2
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker $USER
+   ```
+
+2. **Configure Environment & Launch:**
+   ```bash
+   cp .env.production.example .env
+   sudo docker compose up -d --build
+   ```
+
+---
+
+#### 🪟 **B. Windows (Docker Desktop / PowerShell)**
+
+1. Open **PowerShell** in project directory:
+   ```powershell
+   Copy-Item .env.production.example .env
+   docker compose up -d --build
+   ```
+2. Open browser: `http://localhost`
+
+---
+
+#### 🍎 **C. macOS (Apple Silicon / Intel)**
+
+1. Open Terminal in project directory:
+   ```bash
+   cp .env.production.example .env
+   docker compose up -d --build
+   ```
+2. Open browser: `http://localhost`
+
+---
+
+# 🇵🇹 Português
+
+## ⚡ Guia de Início e Implantação
+
+### 💻 1. Configuração para Desenvolvimento Local
+
+#### **Requisitos Prévios**
+- Node.js (v18 ou superior)
+- NPM (v9 ou superior)
+- Git
+
+#### **Passos**
+```bash
+# 1. Clonar o repositório
+git clone https://github.com/TortillaPy/ObstetrApp.git
+cd ObstetrApp
+
+# 2. Instalar dependências
+npm install
+
+# 3. Configurar variáveis de ambiente
+cp "ObstetrApp Backend/.env.example" "ObstetrApp Backend/.env"
+cp "ObstetrApp Frontend/.env.example" "ObstetrApp Frontend/.env"
+
+# 4. Inicializar banco de dados SQLite local
+cd "ObstetrApp Backend"
+npx prisma db push
+npx prisma generate
+cd ..
+
+# 5. Executar servidor de desenvolvimento
+npm run dev
 ```
 
 ---
 
-## 🔒 Propiedad y Estado del Proyecto
+### 🐳 2. Implantação com Docker por Sistema Operacional
 
-Este proyecto corresponde a una **comisión privada** en desarrollo activo. Todos los derechos reservados.
+#### 🐧 **A. Linux (Ubuntu / Debian / Servidor Cloud)**
+```bash
+cp .env.production.example .env
+sudo docker compose up -d --build
+```
+
+#### 🪟 **B. Windows (Docker Desktop / PowerShell)**
+```powershell
+Copy-Item .env.production.example .env
+docker compose up -d --build
+```
+
+#### 🍎 **C. macOS (Apple Silicon / Intel)**
+```bash
+cp .env.production.example .env
+docker compose up -d --build
+```
+
+---
+
+## 📄 License & Contact
+- **Developer:** ObstetrApp Core Team
+- **Support:** WhatsApp (+595 985 944757)
