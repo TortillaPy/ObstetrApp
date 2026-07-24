@@ -32,4 +32,5 @@ export interface Paciente {
   tiene_dispareunia?: boolean;
   tiene_sangrado_anormal?: boolean;
   tiene_flujo_vaginal?: boolean;
+  medico_id?: string;
 }

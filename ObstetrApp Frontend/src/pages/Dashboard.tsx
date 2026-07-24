@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, UserPlus, CalendarPlus, Clock, User, FileText, X, Stethoscope, Activity, FileStack, Plus, Play, Info } from 'lucide-react';
 import { useAppContext } from '../components/AppContext';
+import { useAuthStore } from '../data/stores/useAuthStore';
 import { repositories } from '../lib/di';
 import { v4 as uuidv4 } from 'uuid';
 import { Cita, EstadoCita } from '../domain/entities/Cita';
@@ -16,7 +17,8 @@ const TIME_SLOTS = [
 ];
 
 export function Dashboard() {
-  const { activePaciente, setActivePaciente } = useAppContext();
+  const { activePaciente, setActivePaciente, selectedDoctorId, setSelectedDoctorId, medicosList } = useAppContext();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   // Agenda / Lists
@@ -79,10 +81,11 @@ export function Dashboard() {
 
   const loadData = async () => {
     try {
-      const citas = await repositories.citas.getAll();
+      const targetDoctorId = selectedDoctorId || undefined;
+      const citas = await repositories.citas.getAll(targetDoctorId);
       setAllCitas(citas);
 
-      const pacs = await repositories.pacientes.getAll();
+      const pacs = await repositories.pacientes.getAll(targetDoctorId);
       setPacientesOptions(pacs);
 
       const pMap: Record<string, string> = {};
@@ -110,7 +113,7 @@ export function Dashboard() {
 
       // 2. Calculate Dashboard Stats
       const todayAllCitas = citas.filter(c => c.fecha_cita.startsWith(todayDateStr));
-      const activeEmbs = await repositories.embarazos.getAll();
+      const activeEmbs = await repositories.embarazos.getAll(targetDoctorId);
       const filteredActiveEmbs = activeEmbs.filter(e => e.estado === 'activo');
       setActiveEmbarazosList(filteredActiveEmbs);
       
@@ -160,7 +163,7 @@ export function Dashboard() {
 
   useEffect(() => {
     loadData();
-  }, [activePaciente]);
+  }, [activePaciente, selectedDoctorId]);
 
   useEffect(() => {
     loadActivePatientDetails();
@@ -579,6 +582,36 @@ export function Dashboard() {
                 );
               })()}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN DOCTOR SELECTOR BANNER */}
+      {user?.rol === 'ADMIN' && (
+        <div className="bg-[#1E3A8A] text-white rounded-2xl p-4 md:p-5 shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-white shrink-0">
+              <Stethoscope className="w-5 h-5 text-blue-200" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest block">Panel de Administración</span>
+              <h3 className="text-sm font-bold text-white">Médico Seleccionado (Consultas y Directorio)</h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs text-blue-200 font-semibold shrink-0">Filtrar por Médico:</label>
+            <select
+              value={selectedDoctorId || ''}
+              onChange={(e) => setSelectedDoctorId(e.target.value || null)}
+              className="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2.5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-64 cursor-pointer shadow-sm"
+            >
+              {medicosList.map((doc) => (
+                <option key={doc.id_usuario} value={doc.id_usuario}>
+                  Dr. {doc.nombre} {doc.apellido} ({doc.especialidad || 'Médico'})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       )}

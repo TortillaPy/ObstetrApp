@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Control } from '../../../domain/entities/Control';
 import { Cita } from '../../../domain/entities/Cita';
 import { repositories } from '../../../lib/di';
+import { useAuthStore } from '../../../data/stores/useAuthStore';
 import { Plus, Trash2, X, Activity, Baby, CalendarClock, Stethoscope, FileText, Scale, CalendarDays, Clock, AlertTriangle } from 'lucide-react';
 
 const TIME_SLOTS = [
@@ -33,8 +34,22 @@ export function TabControles({ controles, onAddControl, onDeleteControl, fum }: 
   const [lcf, setLcf] = useState('');
   const [movimientos, setMovimientos] = useState<'+' | '-'>('+');
   const [proteinuria, setProteinuria] = useState<'+' | '-'>('-');
+  const { user } = useAuthStore();
+  const getDoctorInitials = () => {
+    if (user && user.nombre && user.apellido) {
+      return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
+    }
+    return 'AM';
+  };
+
   const [signos, setSignos] = useState('');
-  const [iniciales, setIniciales] = useState('JN');
+  const [iniciales, setIniciales] = useState(getDoctorInitials());
+
+  useEffect(() => {
+    if (user && user.nombre && user.apellido) {
+      setIniciales(`${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase());
+    }
+  }, [user]);
   
   // Next appointment state
   const [proxima, setProxima] = useState('');
@@ -171,7 +186,7 @@ export function TabControles({ controles, onAddControl, onDeleteControl, fum }: 
     setEg(''); setPeso(''); setPaSistolica(''); setPaDiastolica('');
     setAlturaUt(''); setPresentacion('Cefalica'); setLcf('');
     setMovimientos('+'); setProteinuria('-'); setSignos('');
-    setIniciales('JN'); setProxima(''); setProximaHora(''); setProximaMotivo('Control Prenatal');
+    setIniciales(getDoctorInitials()); setProxima(''); setProximaHora(''); setProximaMotivo('Control Prenatal');
     setIsProximaManuallyEdited(false);
   };
 
@@ -264,7 +279,7 @@ export function TabControles({ controles, onAddControl, onDeleteControl, fum }: 
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Edad Gest. (Sem) *</label>
-                         <input required type="number" min="0" value={eg} onChange={(e) => setEg(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                         <input required type="number" min="0" value={eg} onFocus={(e) => e.target.select()} onChange={(e) => setEg(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex justify-between">
@@ -275,15 +290,15 @@ export function TabControles({ controles, onAddControl, onDeleteControl, fum }: 
                              </span>
                            )}
                          </label>
-                         <input required type="number" step="0.1" min="0" value={peso} onChange={(e) => setPeso(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                         <input required type="number" step="0.1" min="0" value={peso} onFocus={(e) => e.target.select()} onChange={(e) => setPeso(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PA Sistólica</label>
-                         <input type="number" min="0" value={paSistolica} onChange={(e) => setPaSistolica(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Ej. 120" />
+                         <input type="number" min="0" value={paSistolica} onFocus={(e) => e.target.select()} onChange={(e) => setPaSistolica(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Ej. 120" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PA Diastólica</label>
-                         <input type="number" min="0" value={paDiastolica} onChange={(e) => setPaDiastolica(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Ej. 80" />
+                         <input type="number" min="0" value={paDiastolica} onFocus={(e) => e.target.select()} onChange={(e) => setPaDiastolica(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Ej. 80" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Proteinuria</label>

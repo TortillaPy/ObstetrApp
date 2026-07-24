@@ -39,4 +39,5 @@ export interface Cita {
   gyn_abdomen_pelvis?: string;
   gyn_especuloscopia?: string;
   gyn_tacto_vaginal?: string;
+  medico_id?: string;
 }

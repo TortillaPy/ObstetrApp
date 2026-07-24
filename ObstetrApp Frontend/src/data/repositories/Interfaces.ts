@@ -10,13 +10,15 @@ import { Reposo } from '../../domain/entities/Reposo';
 import { SolicitudLaboratorio } from '../../domain/entities/SolicitudLaboratorio';
 
 export interface IPacienteRepository extends IRepository<Paciente> {
+  getAll(medicoId?: string): Promise<Paciente[]>;
   getByCedula(cedula: string): Promise<Paciente | null>;
-  search(query: string): Promise<Paciente[]>;
+  search(query: string, medicoId?: string): Promise<Paciente[]>;
 }
 
 export interface IAntecedentesRepository extends IRepository<Antecedentes> {}
 
 export interface IEmbarazoRepository extends IRepository<Embarazo> {
+  getAll(medicoId?: string): Promise<Embarazo[]>;
   getByCedulaId(cedulaId: string): Promise<Embarazo[]>;
   getActiveByCedulaId(cedulaId: string): Promise<Embarazo | null>;
 }
@@ -30,6 +32,7 @@ export interface IControlRepository extends IRepository<Control> {
 }
 
 export interface ICitaRepository extends IRepository<Cita> {
+  getAll(medicoId?: string): Promise<Cita[]>;
   getByCedulaId(cedulaId: string): Promise<Cita[]>;
 }
 

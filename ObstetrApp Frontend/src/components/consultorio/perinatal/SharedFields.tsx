@@ -24,11 +24,22 @@ export function RadioField({ label, name, checked, onChange }: { label: string, 
 }
 
 export function NumField({ label, value, onChange, className, step, min = "0" }: { label: string, value: number, onChange: (v: number) => void, className?: string, step?: string, min?: string }) {
-  // Campo numérico para valores médicos o de control con validación básica.
+  // Campo numérico para valores médicos o de control con auto-selección al hacer clic.
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
-      <input type="number" step={step} min={min} value={value !== undefined && value !== null ? value : ''} onChange={(e) => onChange(Number(e.target.value))} className="border border-[#E2E8F0] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+      <input
+        type="number"
+        step={step}
+        min={min}
+        value={value !== undefined && value !== null ? value : ''}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          const val = e.target.value;
+          onChange(val === '' ? 0 : Number(val));
+        }}
+        className="border border-[#E2E8F0] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
+      />
     </div>
   );
 }

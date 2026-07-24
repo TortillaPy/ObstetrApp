@@ -10,6 +10,8 @@ import { SolicitudLaboratorio } from '../domain/entities/SolicitudLaboratorio';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { PrintHeader } from '../components/PrintHeader';
+import { DOCTOR_CONFIG } from '../lib/config';
+import { useAuthStore } from '../data/stores/useAuthStore';
 import { Printer } from 'lucide-react';
 
 // Import split components
@@ -24,6 +26,10 @@ import { ModalPrintOptions } from '../components/historial/ModalPrintOptions';
 export function Historial() {
   const { activePaciente } = useAppContext();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+
+  const doctorName = user && user.nombre && user.apellido ? `Dr. ${user.nombre} ${user.apellido}` : DOCTOR_CONFIG.name;
+  const doctorSpecialty = user?.especialidad || DOCTOR_CONFIG.specialty;
 
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -485,10 +491,12 @@ export function Historial() {
         {printOptions.perinatal && embarazoActivo && (
             <section className="print-section mb-6">
                 <h4 className="font-bold text-sm bg-slate-50 border-l-4 border-[#1E3A8A] px-3 py-1.5 uppercase tracking-wider mb-4 text-[#1E3A8A] print-title-accent">3. Estado del Embarazo Actual</h4>
-                <div className="grid grid-cols-3 gap-6 text-xs pl-2">
+                <div className="grid grid-cols-5 gap-4 text-xs pl-2">
                     <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">FPP Estimada</span><span className="font-bold text-sm text-[#1E3A8A]">{embarazoActivo.fpp ? new Date(embarazoActivo.fpp).toLocaleDateString('es-ES') : 'N/A'}</span></div>
                     <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">Controles Realizados</span><span className="font-bold text-sm text-slate-850">{controles.length}</span></div>
-                    <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">Semanas de Gestación Actual</span><span className="font-bold text-sm text-slate-850">{controles[0]?.eg_semanas || 'N/A'} semanas</span></div>
+                    <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">EG Actual</span><span className="font-bold text-sm text-slate-850">{controles[0]?.eg_semanas || 'N/A'} sem</span></div>
+                    <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">Peso Inicial</span><span className="font-bold text-sm text-slate-850">{embarazoActivo.peso_anterior_kg ? `${embarazoActivo.peso_anterior_kg} kg` : (controles.length > 0 ? `${controles[controles.length - 1].peso_kg} kg` : 'N/A')}</span></div>
+                    <div><span className="font-bold uppercase text-[10px] text-gray-500 block mb-0.5">Peso Última Consulta</span><span className="font-bold text-sm text-slate-850">{controles.length > 0 ? `${controles[0].peso_kg} kg` : (getUltimoPeso() !== 'N/A' ? getUltimoPeso() : 'N/A')}</span></div>
                 </div>
             </section>
         )}
@@ -672,6 +680,13 @@ export function Historial() {
               </div>
           </section>
         )}
+
+        <div className="mt-16 pt-6 flex flex-col items-center justify-end break-inside-avoid">
+          <div className="border-t-2 border-black w-64 pt-2 text-center">
+            <p className="font-bold text-sm text-black">{doctorName}</p>
+            <p className="text-xs text-black">{doctorSpecialty} - {DOCTOR_CONFIG.license}</p>
+          </div>
+        </div>
 
         <div className="mt-8 pt-6 border-t border-dashed border-gray-400 text-center text-[10px] text-gray-600 uppercase tracking-widest break-inside-avoid font-bold">
             *** FIN DE LA IMPRESIÓN DEL HISTORIAL ***

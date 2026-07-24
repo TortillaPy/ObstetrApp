@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../AppContext';
-import { Save, ArrowLeft } from 'lucide-react';
+import { Save, ArrowLeft, CheckCircle2, FileText, History } from 'lucide-react';
 import { repositories } from '../../lib/di';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,8 @@ interface GinecologiaFormProps {
 export function GinecologiaForm({ onCancel }: GinecologiaFormProps) {
   const { activePaciente, setActivePaciente } = useAppContext();
   const navigate = useNavigate();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Antecedentes
   const [menarca, setMenarca] = useState<number | ''>('');
@@ -48,57 +50,63 @@ export function GinecologiaForm({ onCancel }: GinecologiaFormProps) {
 
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePaciente) return;
+    if (!activePaciente || isSaving) return;
 
-    // Actualizar paciente con los antecedentes (para que sean visibles cuando se edite y se usen en H. Perinatal)
-    const updatedPaciente = {
-      ...activePaciente,
-      menarca: menarca !== '' ? Number(menarca) : undefined,
-      fum,
-      ritmo_menstrual: ritmoMenstrual,
-      metodo_anticonceptivo: metodoAnticonc,
-      tiene_dismenorrea: dismenorrea,
-      tiene_dispareunia: dispareunia,
-      tiene_sangrado_anormal: sangradoAnormal,
-      tiene_flujo_vaginal: flujoVaginal
-    };
+    setIsSaving(true);
+    try {
+      // Actualizar paciente con los antecedentes (para que sean visibles cuando se edite y se usen en H. Perinatal)
+      const updatedPaciente = {
+        ...activePaciente,
+        menarca: menarca !== '' ? Number(menarca) : undefined,
+        fum,
+        ritmo_menstrual: ritmoMenstrual,
+        metodo_anticonceptivo: metodoAnticonc,
+        tiene_dismenorrea: dismenorrea,
+        tiene_dispareunia: dispareunia,
+        tiene_sangrado_anormal: sangradoAnormal,
+        tiene_flujo_vaginal: flujoVaginal
+      };
 
-    await repositories.pacientes.update(activePaciente.cedula_id, updatedPaciente);
-    setActivePaciente(updatedPaciente);
+      await repositories.pacientes.update(activePaciente.cedula_id, updatedPaciente);
+      setActivePaciente(updatedPaciente);
 
-    // Guardar la evolución como una Cita en el historial clínico
-    const nuevaConsultaGyn: Cita = {
-      id_cita: uuidv4(),
-      cedula_id: activePaciente.cedula_id,
-      fecha_cita: new Date().toISOString(),
-      estado: 'realizada',
-      tipo: 'consulta',
-      motivo: 'Consulta Ginecológica',
-      diagnostico: diagnostico,
-      plan: plan,
+      // Guardar la evolución como una Cita en el historial clínico
+      const nuevaConsultaGyn: Cita = {
+        id_cita: uuidv4(),
+        cedula_id: activePaciente.cedula_id,
+        fecha_cita: new Date().toISOString(),
+        estado: 'realizada',
+        tipo: 'consulta',
+        motivo: 'Consulta Ginecológica',
+        diagnostico: diagnostico,
+        plan: plan,
+        
+        // Campos ginecológicos especializados
+        gyn_motivo: motivo,
+        gyn_examen_mamario: examenMamario,
+        gyn_abdomen_pelvis: abdomenPelvis,
+        gyn_especuloscopia: especuloscopia,
+        gyn_tacto_vaginal: tactoVaginal
+      };
+
+      await repositories.citas.save(nuevaConsultaGyn);
+
+      // Limpiamos los estados
+      setMotivo('');
+      setExamenMamario('');
+      setAbdomenPelvis('');
+      setEspeculoscopia('');
+      setTactoVaginal('');
+      setDiagnostico('');
+      setPlan('');
       
-      // Campos ginecológicos especializados
-      gyn_motivo: motivo,
-      gyn_examen_mamario: examenMamario,
-      gyn_abdomen_pelvis: abdomenPelvis,
-      gyn_especuloscopia: especuloscopia,
-      gyn_tacto_vaginal: tactoVaginal
-    };
-
-    await repositories.citas.save(nuevaConsultaGyn);
-
-    alert("Consulta ginecológica guardada correctamente.");
-    
-    // Limpiamos los estados
-    setMotivo('');
-    setExamenMamario('');
-    setAbdomenPelvis('');
-    setEspeculoscopia('');
-    setTactoVaginal('');
-    setDiagnostico('');
-    setPlan('');
-    
-    navigate('/historial');
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error guardando consulta ginecológica:", error);
+      alert("Ocurrió un error al guardar la consulta ginecológica.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!activePaciente) {
@@ -218,12 +226,54 @@ export function GinecologiaForm({ onCancel }: GinecologiaFormProps) {
 
           <div className="pt-6 flex justify-end gap-3">
              <button type="button" onClick={onCancel} className="px-5 py-2.5 rounded-lg border border-[#E2E8F0] text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-colors">Cancelar</button>
-             <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#0D9488] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#0F766E] shadow-sm transition-colors cursor-pointer">
-                <Save className="w-4 h-4"/> Guardar Evolución
+             <button 
+               disabled={isSaving}
+               type="submit" 
+               className="inline-flex items-center gap-2 rounded-lg bg-[#0D9488] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#0F766E] shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+             >
+                <Save className="w-4 h-4"/> {isSaving ? 'Guardando...' : 'Guardar Evolución'}
              </button>
           </div>
         </form>
       </div>
+
+      {/* Modal de éxito tras guardar */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-teal-100 text-[#0D9488] rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+              <h3 className="font-bold text-xl text-[#2C3333] mb-2">¡Consulta Ginecológica Guardada!</h3>
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                La evolución clínica ginecológica se guardó correctamente en el expediente de <strong className="text-[#0D9488]">{activePaciente.nombre} {activePaciente.apellido}</strong>.
+              </p>
+              
+              <div className="flex flex-col gap-2.5">
+                <button 
+                  onClick={() => navigate('/recetas')}
+                  className="w-full py-3 px-4 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" /> Ir a Receta / Documentos
+                </button>
+                <button 
+                  onClick={() => navigate('/historial')}
+                  className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] text-gray-700 hover:bg-gray-50 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <History className="w-4 h-4" /> Ver Historial Clínico
+                </button>
+                <button 
+                  onClick={onCancel}
+                  className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 font-semibold transition-colors cursor-pointer"
+                >
+                  Volver al Menú del Consultorio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

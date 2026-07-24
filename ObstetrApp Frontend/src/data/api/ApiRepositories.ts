@@ -22,14 +22,25 @@ import { SolicitudLaboratorio } from '../../domain/entities/SolicitudLaboratorio
 const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/api';
 
 async function fetchApi(endpoint: string, options?: RequestInit) {
+  const token = localStorage.getItem('obstetrapp_token');
+  const authHeaders: Record<string, string> = {};
+  if (token) {
+    authHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options?.headers,
     },
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('obstetrapp_token');
+      localStorage.removeItem('obstetrapp_user');
+    }
     if (res.status === 404) return null;
     throw new Error(`API Error: ${res.statusText}`);
   }
@@ -37,8 +48,9 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 }
 
 export class PacienteApiRepository implements IPacienteRepository {
-  async getAll(): Promise<Paciente[]> {
-    return fetchApi('/pacientes') || [];
+  async getAll(medicoId?: string): Promise<Paciente[]> {
+    const param = medicoId ? `?medico_id=${encodeURIComponent(medicoId)}` : '';
+    return fetchApi(`/pacientes${param}`) || [];
   }
   async getById(id: string): Promise<Paciente | null> {
     return fetchApi(`/pacientes/${encodeURIComponent(id)}`);
@@ -55,8 +67,12 @@ export class PacienteApiRepository implements IPacienteRepository {
   async getByCedula(cedula: string): Promise<Paciente | null> {
     return this.getById(cedula);
   }
-  async search(query: string): Promise<Paciente[]> {
-    return fetchApi(`/pacientes?q=${encodeURIComponent(query)}`) || [];
+  async search(query: string, medicoId?: string): Promise<Paciente[]> {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (medicoId) params.append('medico_id', medicoId);
+    const qStr = params.toString() ? `?${params.toString()}` : '';
+    return fetchApi(`/pacientes${qStr}`) || [];
   }
 }
 
@@ -75,8 +91,9 @@ export class AntecedentesApiRepository implements IAntecedentesRepository {
 }
 
 export class EmbarazoApiRepository implements IEmbarazoRepository {
-  async getAll(): Promise<Embarazo[]> {
-    return fetchApi('/embarazos') || [];
+  async getAll(medicoId?: string): Promise<Embarazo[]> {
+    const param = medicoId ? `?medico_id=${encodeURIComponent(medicoId)}` : '';
+    return fetchApi(`/embarazos${param}`) || [];
   }
   async getById(id: string): Promise<Embarazo | null> {
     return fetchApi(`/embarazos/${encodeURIComponent(id)}`);
@@ -137,8 +154,9 @@ export class ControlApiRepository implements IControlRepository {
 }
 
 export class CitaApiRepository implements ICitaRepository {
-  async getAll(): Promise<Cita[]> {
-    return fetchApi('/citas') || [];
+  async getAll(medicoId?: string): Promise<Cita[]> {
+    const param = medicoId ? `?medico_id=${encodeURIComponent(medicoId)}` : '';
+    return fetchApi(`/citas${param}`) || [];
   }
   async getById(id: string): Promise<Cita | null> { return null; }
   async save(item: Cita): Promise<void> {

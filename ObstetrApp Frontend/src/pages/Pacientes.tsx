@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, UserCheck, X, UserPlus, ArrowLeft, Play, FileText, Edit2 } from 'lucide-react';
+import { Search, Plus, UserCheck, X, UserPlus, ArrowLeft, Play, FileText, Edit2, Stethoscope } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { repositories } from '../lib/di';
 import { Paciente, Etnia, NivelEstudio, EstadoCivil } from '../domain/entities/Paciente';
 import { Antecedentes } from '../domain/entities/Antecedentes';
 import { useAppContext } from '../components/AppContext';
+import { useAuthStore } from '../data/stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 
 export function Pacientes() {
   const [query, setQuery] = useState('');
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(false);
-  const { setActivePaciente, activePaciente } = useAppContext();
+  const { setActivePaciente, activePaciente, selectedDoctorId, setSelectedDoctorId, medicosList } = useAppContext();
+  const { user } = useAuthStore();
   const [viewMode, setViewMode] = useState<'buscar' | 'crear' | 'editar'>('buscar');
   const navigate = useNavigate();
 
@@ -28,7 +30,8 @@ export function Pacientes() {
   const fetchPacientes = async (q: string) => {
     setLoading(true);
     try {
-      const results = q ? await repositories.pacientes.search(q) : await repositories.pacientes.getAll();
+      const targetDoctorId = selectedDoctorId || undefined;
+      const results = q ? await repositories.pacientes.search(q, targetDoctorId) : await repositories.pacientes.getAll(targetDoctorId);
       setPacientes(results);
     } finally {
       setLoading(false);
@@ -36,8 +39,8 @@ export function Pacientes() {
   };
 
   useEffect(() => {
-    fetchPacientes('');
-  }, [viewMode]);
+    fetchPacientes(query);
+  }, [viewMode, selectedDoctorId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +138,8 @@ export function Pacientes() {
       menarca: formData.menarca,
       fum: formData.fum,
       ritmo_menstrual: formData.ritmo_menstrual,
-      metodo_anticonceptivo: formData.metodo_anticonceptivo
+      metodo_anticonceptivo: formData.metodo_anticonceptivo,
+      medico_id: selectedDoctorId || user?.id_usuario
     };
 
     try {
@@ -208,9 +212,28 @@ export function Pacientes() {
 
         {/* Header Actions */}
         {viewMode === 'buscar' && (
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Admin Doctor Selector */}
+            {user?.rol === 'ADMIN' && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shrink-0">
+                <Stethoscope className="w-4 h-4 text-[#1E3A8A]" />
+                <span className="text-xs text-slate-500 font-bold hidden sm:inline">Médico:</span>
+                <select
+                  value={selectedDoctorId || ''}
+                  onChange={(e) => setSelectedDoctorId(e.target.value || null)}
+                  className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] cursor-pointer"
+                >
+                  {medicosList.map((doc) => (
+                    <option key={doc.id_usuario} value={doc.id_usuario}>
+                      Dr. {doc.nombre} {doc.apellido}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Search Input */}
-            <form onSubmit={handleSearch} className="relative flex-1 md:w-80">
+            <form onSubmit={handleSearch} className="relative flex-1 md:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -334,7 +357,7 @@ export function Pacientes() {
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Años en el Mayor Nivel</label>
-                        <input min={0} type="number" name="estudios_anios_mayor_nivel" value={formData.estudios_anios_mayor_nivel || ''} onChange={handleInputChange} className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#1E3A8A]" />
+                        <input min={0} type="number" name="estudios_anios_mayor_nivel" value={formData.estudios_anios_mayor_nivel || ''} onFocus={(e) => e.target.select()} onChange={handleInputChange} className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#1E3A8A]" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">¿Sabe Leer/Escribir? *</label>
@@ -375,7 +398,7 @@ export function Pacientes() {
                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Menarca (Edad de primer regla)</label>
-                        <input type="number" min="0" name="menarca" value={formData.menarca || ''} onChange={handleInputChange} className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#0D9488]" />
+                        <input type="number" min="0" name="menarca" value={formData.menarca || ''} onFocus={(e) => e.target.select()} onChange={handleInputChange} className="border border-[#CBD5E1] rounded p-2 text-sm bg-white focus:outline-none focus:border-[#0D9488]" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">F.U.M. (Última Menstruación)</label>

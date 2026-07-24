@@ -3,7 +3,7 @@ import { useAppContext } from '../AppContext';
 import { repositories } from '../../lib/di';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import { Save, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Save, AlertTriangle, ArrowLeft, CheckCircle2, FileText, History } from 'lucide-react';
 import { Cita } from '../../domain/entities/Cita';
 
 interface SoapFormProps {
@@ -14,6 +14,8 @@ export function SoapForm({ onCancel }: SoapFormProps) {
   const { activePaciente } = useAppContext();
   const navigate = useNavigate();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // SOAP Form State
   const [subjetivo, setSubjetivo] = useState('');
@@ -36,29 +38,37 @@ export function SoapForm({ onCancel }: SoapFormProps) {
   }
 
   const handleGuardarConsulta = async () => {
-    const nuevaCita: Cita = {
-      id_cita: uuidv4(),
-      cedula_id: activePaciente.cedula_id,
-      fecha_cita: new Date().toISOString(),
-      estado: 'realizada',
-      tipo: 'consulta',
-      sintomas: subjetivo,
-      motivo: "Consulta Normal (SOAP)",
-      examen_fisico: examenFisico,
-      pa: pa,
-      fc: fc,
-      fr: fr,
-      sato2: sato2,
-      glicemia: glicemia,
-      peso: peso,
-      diagnostico: diagnostico,
-      plan: plan
-    };
-    
-    await repositories.citas.save(nuevaCita);
-    setShowConfirmModal(false);
-    alert('Consulta SOAP guardada exitosamente.');
-    navigate('/historial');
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const nuevaCita: Cita = {
+        id_cita: uuidv4(),
+        cedula_id: activePaciente.cedula_id,
+        fecha_cita: new Date().toISOString(),
+        estado: 'realizada',
+        tipo: 'consulta',
+        sintomas: subjetivo,
+        motivo: "Consulta Normal (SOAP)",
+        examen_fisico: examenFisico,
+        pa: pa,
+        fc: fc,
+        fr: fr,
+        sato2: sato2,
+        glicemia: glicemia,
+        peso: peso,
+        diagnostico: diagnostico,
+        plan: plan
+      };
+      
+      await repositories.citas.save(nuevaCita);
+      setShowConfirmModal(false);
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error guardando consulta SOAP:", error);
+      alert("Ocurrió un error al guardar la consulta.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -91,23 +101,23 @@ export function SoapForm({ onCancel }: SoapFormProps) {
                  </div>
                  <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">FC (lpm)</label>
-                   <input value={fc} onChange={e => setFc(e.target.value)} type="number" min="0" placeholder="75" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+                   <input value={fc} onFocus={e => e.target.select()} onChange={e => setFc(e.target.value)} type="number" min="0" placeholder="75" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
                  </div>
                  <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">FR (rpm)</label>
-                   <input value={fr} onChange={e => setFr(e.target.value)} type="number" min="0" placeholder="16" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+                   <input value={fr} onFocus={e => e.target.select()} onChange={e => setFr(e.target.value)} type="number" min="0" placeholder="16" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
                  </div>
                  <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">SatO2 (%)</label>
-                   <input value={sato2} onChange={e => setSato2(e.target.value)} type="number" min="0" placeholder="98" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+                   <input value={sato2} onFocus={e => e.target.select()} onChange={e => setSato2(e.target.value)} type="number" min="0" placeholder="98" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
                  </div>
                  <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Glicemia</label>
-                   <input value={glicemia} onChange={e => setGlicemia(e.target.value)} type="number" min="0" placeholder="90" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+                   <input value={glicemia} onFocus={e => e.target.select()} onChange={e => setGlicemia(e.target.value)} type="number" min="0" placeholder="90" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
                  </div>
                  <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Peso (kg)</label>
-                   <input value={peso} onChange={e => setPeso(e.target.value)} type="number" min="0" step="0.1" placeholder="65.5" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
+                   <input value={peso} onFocus={e => e.target.select()} onChange={e => setPeso(e.target.value)} type="number" min="0" step="0.1" placeholder="65.5" className="border border-[#CBD5E1] rounded p-2 text-sm focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]" />
                  </div>
               </div>
               <textarea value={examenFisico} onChange={e => setExamenFisico(e.target.value)} rows={3} placeholder="Observaciones al examen físico general y regional..." className="border border-[#CBD5E1] rounded-lg p-3 text-sm focus:outline-none focus:border-[#2563EB] resize-none focus:ring-1 focus:ring-[#2563EB]" required></textarea>
@@ -148,16 +158,56 @@ export function SoapForm({ onCancel }: SoapFormProps) {
               </p>
               <div className="flex gap-3">
                 <button 
+                  disabled={isSaving}
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-2.5 rounded-lg border border-[#E2E8F0] text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-lg border border-[#E2E8F0] text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button 
+                  disabled={isSaving}
                   onClick={handleGuardarConsulta}
-                  className="flex-1 py-2.5 rounded-lg bg-[#2563EB] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#1D4ED8] transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-lg bg-[#2563EB] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#1D4ED8] transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center"
                 >
-                  Confirmar y Guardar
+                  {isSaving ? 'Guardando...' : 'Confirmar y Guardar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de éxito tras guardar */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+              <h3 className="font-bold text-xl text-[#2C3333] mb-2">¡Consulta SOAP Guardada!</h3>
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                La evolución clínica se guardó correctamente en el expediente de <strong className="text-[#1E3A8A]">{activePaciente.nombre} {activePaciente.apellido}</strong>.
+              </p>
+              
+              <div className="flex flex-col gap-2.5">
+                <button 
+                  onClick={() => navigate('/recetas')}
+                  className="w-full py-3 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" /> Ir a Receta / Documentos
+                </button>
+                <button 
+                  onClick={() => navigate('/historial')}
+                  className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] text-gray-700 hover:bg-gray-50 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <History className="w-4 h-4" /> Ver Historial Clínico
+                </button>
+                <button 
+                  onClick={onCancel}
+                  className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 font-semibold transition-colors cursor-pointer"
+                >
+                  Volver al Menú del Consultorio
                 </button>
               </div>
             </div>
@@ -167,3 +217,4 @@ export function SoapForm({ onCancel }: SoapFormProps) {
     </div>
   );
 }
+

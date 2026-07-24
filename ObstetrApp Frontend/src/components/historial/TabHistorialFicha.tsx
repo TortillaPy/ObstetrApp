@@ -140,31 +140,70 @@ export function TabHistorialFicha({
         </div>
 
         {/* Bento: Estado del Embarazo Actual */}
-        {embarazoActivo && (
-          <div className="md:col-span-12 bg-gradient-to-r from-[#1E3A8A] to-[#5a704c] rounded-2xl shadow-md p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-               <p className="text-xs uppercase tracking-widest font-bold opacity-80 mb-1">Embarazo Activo</p>
-               <div className="flex items-baseline gap-3">
-                 <h3 className="text-3xl font-black">{embarazoActivo.fpp ? new Date(embarazoActivo.fpp).toLocaleDateString() : 'N/A'}</h3>
-                 <span className="text-sm font-semibold opacity-90">FPP Estimada</span>
-               </div>
-               <p className="text-sm opacity-80 mt-2">FUM: {new Date(embarazoActivo.fum).toLocaleDateString()}</p>
-            </div>
-            
-            <div className="flex gap-4">
-               <div className="bg-white/10 p-4 rounded-xl text-center border border-white/20 min-w-[100px]">
-                 <p className="text-3xl font-black">{controles.length}</p>
-                 <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-1">Controles<br/>Realizados</p>
-               </div>
-               {controles.length > 0 && (
-                 <div className="bg-white/10 p-4 rounded-xl text-center border border-white/20 min-w-[100px]">
-                   <p className="text-xl font-bold">{controles[0].eg_semanas}</p>
-                   <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-1">Semanas de<br/>Gestación (EG)</p>
+        {embarazoActivo && (() => {
+          const pesoInicialVal = embarazoActivo.peso_anterior_kg && embarazoActivo.peso_anterior_kg > 0
+            ? embarazoActivo.peso_anterior_kg
+            : (controles.length > 0 ? controles[controles.length - 1].peso_kg : null);
+
+          const pesoUltimaVal = controles.length > 0
+            ? controles[0].peso_kg
+            : (ultimoPeso && ultimoPeso !== 'N/A' ? parseFloat(ultimoPeso) : null);
+
+          const diferenciaPeso = (pesoUltimaVal !== null && pesoInicialVal !== null)
+            ? (pesoUltimaVal - pesoInicialVal).toFixed(1)
+            : null;
+
+          return (
+            <div className="md:col-span-12 bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#0D9488] rounded-2xl shadow-md p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+              <div>
+                 <div className="flex items-center gap-2 mb-1">
+                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                   <p className="text-xs uppercase tracking-widest font-bold opacity-90">Embarazo Activo</p>
                  </div>
-               )}
+                 <div className="flex items-baseline gap-3">
+                   <h3 className="text-3xl font-black">{embarazoActivo.fpp ? new Date(embarazoActivo.fpp).toLocaleDateString() : 'N/A'}</h3>
+                   <span className="text-sm font-semibold opacity-90">FPP Estimada</span>
+                 </div>
+                 <p className="text-xs opacity-80 mt-1">FUM: {new Date(embarazoActivo.fum).toLocaleDateString()}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full xl:w-auto">
+                 <div className="bg-white/10 p-3.5 rounded-xl text-center border border-white/20">
+                   <p className="text-2xl font-black">{controles.length}</p>
+                   <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-0.5">Controles<br/>Realizados</p>
+                 </div>
+
+                 {controles.length > 0 && (
+                   <div className="bg-white/10 p-3.5 rounded-xl text-center border border-white/20">
+                     <p className="text-2xl font-black">{controles[0].eg_semanas} <span className="text-xs font-semibold">sem</span></p>
+                     <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-0.5">Semanas de<br/>Gestación (EG)</p>
+                   </div>
+                 )}
+
+                 {/* Peso Inicial */}
+                 <div className="bg-white/10 p-3.5 rounded-xl text-center border border-white/20 min-w-[110px]">
+                   <p className="text-xl font-bold">
+                     {pesoInicialVal ? `${pesoInicialVal} kg` : 'N/A'}
+                   </p>
+                   <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-0.5">Peso Inicial<br/>(Preconcepcional)</p>
+                 </div>
+
+                 {/* Peso Última Consulta */}
+                 <div className="bg-white/10 p-3.5 rounded-xl text-center border border-white/20 min-w-[110px] relative">
+                   <p className="text-xl font-bold">
+                     {pesoUltimaVal ? `${pesoUltimaVal} kg` : 'N/A'}
+                   </p>
+                   <p className="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-0.5">Peso Última<br/>Consulta</p>
+                   {diferenciaPeso !== null && (
+                     <span className={`inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${Number(diferenciaPeso) >= 0 ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/30' : 'bg-amber-500/30 text-amber-200 border border-amber-400/30'}`}>
+                       {Number(diferenciaPeso) >= 0 ? `+${diferenciaPeso}` : diferenciaPeso} kg
+                     </span>
+                   )}
+                 </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Bento: Estudios / Exámenes Pendientes */}
         <div className="md:col-span-12 bg-white rounded-2xl shadow-sm border border-[#E2E8F0] p-6">

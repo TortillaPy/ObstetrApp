@@ -5,6 +5,7 @@ import { Printer, CalendarDays, User, Plus, Trash2, FileText, Activity, FlaskCon
 import { useNavigate } from 'react-router-dom';
 import { PrintHeader } from '../components/PrintHeader';
 import { DOCTOR_CONFIG } from '../lib/config';
+import { useAuthStore } from '../data/stores/useAuthStore';
 import { v4 as uuidv4 } from 'uuid';
 import { Receta } from '../domain/entities/Receta';
 import { Reposo } from '../domain/entities/Reposo';
@@ -48,6 +49,10 @@ const labExams = [
 export function Recetas() {
   const { activePaciente } = useAppContext();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const doctorName = user && user.nombre && user.apellido ? `Dr. ${user.nombre} ${user.apellido}` : DOCTOR_CONFIG.name;
+  const doctorSpecialty = user?.especialidad || DOCTOR_CONFIG.specialty;
+  const doctorLicense = user?.registro_prof || DOCTOR_CONFIG.license;
 
   // Tab navigation: 'receta' | 'reposo' | 'laboratorio'
   const [activeTab, setActiveTab] = useState<'receta' | 'reposo' | 'laboratorio'>('receta');
@@ -606,8 +611,8 @@ export function Recetas() {
 
                 <div className="mt-20 pt-8 pb-10 flex flex-col items-center w-full break-inside-avoid">
                   <div className="border-t-2 border-black w-64 pt-2 text-center">
-                    <p className="font-bold text-sm text-black">{DOCTOR_CONFIG.name}</p>
-                    <p className="text-xs text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
+                    <p className="font-bold text-sm text-black">{doctorName}</p>
+                    <p className="text-xs text-black">{doctorSpecialty} - {doctorLicense}</p>
                   </div>
                 </div>
               </div>
@@ -649,8 +654,8 @@ export function Recetas() {
 
                 <div className="mt-20 pt-8 pb-10 flex flex-col items-center w-full justify-end break-inside-avoid">
                   <div className="border-t-2 border-black w-64 pt-2 text-center">
-                    <p className="font-bold text-sm text-black">{DOCTOR_CONFIG.name}</p>
-                    <p className="text-xs text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
+                    <p className="font-bold text-sm text-black">{doctorName}</p>
+                    <p className="text-xs text-black">{doctorSpecialty} - {doctorLicense}</p>
                   </div>
                 </div>
               </div>
@@ -688,8 +693,8 @@ export function Recetas() {
 
               <div className="mt-8 pt-4 pb-2 flex flex-col items-center w-full justify-end break-inside-avoid">
                 <div className="border-t border-black w-56 pt-1 text-center">
-                  <p className="font-bold text-xs text-black">{DOCTOR_CONFIG.name}</p>
-                  <p className="text-[10px] text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
+                  <p className="font-bold text-xs text-black">{doctorName}</p>
+                  <p className="text-[10px] text-black">{doctorSpecialty} - {doctorLicense}</p>
                 </div>
               </div>
             </div>
@@ -738,8 +743,8 @@ export function Recetas() {
 
               <div className="mt-8 pt-4 pb-2 flex flex-col items-center w-full justify-end break-inside-avoid">
                 <div className="border-t border-black w-56 pt-1 text-center">
-                  <p className="font-bold text-xs text-black">{DOCTOR_CONFIG.name}</p>
-                  <p className="text-[10px] text-black">{DOCTOR_CONFIG.specialty} - {DOCTOR_CONFIG.license}</p>
+                  <p className="font-bold text-xs text-black">{doctorName}</p>
+                  <p className="text-[10px] text-black">{doctorSpecialty} - {doctorLicense}</p>
                 </div>
               </div>
             </div>
