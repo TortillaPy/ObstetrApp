@@ -93,14 +93,33 @@ export const MOCK_EMBARAZO_DEMO: Embarazo = {
   cedula_id: '9999999-MOCK',
   fum: '2026-01-15',
   fpp: '2026-10-22',
-  dudas_fum: 0,
-  eg_confiada: 1,
-  eco_fum: '2026-02-20',
-  antipaludico: 0,
-  carne: 1,
+  dudas_fum: false,
+  peso_anterior_kg: 60,
+  talla_cm: 165,
   estado: 'activo',
-  createdAt: '2026-01-15T00:00:00Z',
-  updatedAt: '2026-01-15T00:00:00Z'
+  fumadora_activa_1tr: 0,
+  fumadora_activa_2tr: 0,
+  fumadora_activa_3tr: 0,
+  fumadora_pasiva_1tr: 0,
+  fumadora_pasiva_2tr: 0,
+  fumadora_pasiva_3tr: 0,
+  drogas_1tr: 0,
+  drogas_2tr: 0,
+  drogas_3tr: 0,
+  alcohol_1tr: 0,
+  alcohol_2tr: 0,
+  alcohol_3tr: 0,
+  violencia_1tr: 0,
+  violencia_2tr: 0,
+  violencia_3tr: 0,
+  inm_antitetanica_vigente: 1,
+  inm_antitetanica_dosis1: 1,
+  inm_antitetanica_dosis2: 1,
+  inm_examen_odontologico: 1,
+  inm_examen_mamas: 1,
+  inm_cervix_inspeccion: 'normal',
+  inm_cervix_pap: 'normal',
+  inm_cervix_colp: 'normal',
 };
 
 export const MOCK_ANTECEDENTES_DEMO: Antecedentes = {
@@ -109,54 +128,53 @@ export const MOCK_ANTECEDENTES_DEMO: Antecedentes = {
   hist_gestas_previas: 1, hist_partos: 1, hist_vaginales: 1, hist_cesareas: 0, hist_abortos: 0,
   hist_abortos_tres_espontaneos_consecutivos: 0, hist_nacidos_vivos: 1, hist_nacidos_vivos_muertos_1ra_semana: 0, hist_nacidos_vivos_muertos_despues_1ra_semana: 0, hist_nacidos_muertos: 0, hist_viven: 1,
   hist_fin_embarazo_anterior_menos_de_1_anio: 0, hist_embarazo_planeado: 1, hist_fracaso_anticonceptivo: 'no',
-  inm_antirubeola: 'si'
+  inm_antirubeola: 'previa'
 };
 
 export const MOCK_CONTROLES_DEMO: Control[] = [
   {
     id_control: 'mock-ctrl-001',
-    id_embarazo: 'mock-emb-001',
-    fecha: '2026-03-10',
-    edad_gestacional_semanas: 8,
-    peso: 62.5,
+    embarazo_id: 'mock-emb-001',
+    fecha_visita: '2026-03-10',
+    eg_semanas: 8,
+    peso_kg: 62.5,
     pa_sistolica: 120,
     pa_diastolica: 80,
-    altura_uterina: 12,
-    presentacion: 'Cefálica',
-    lcf: 145,
+    altura_uterina_cm: 12,
+    presentacion_fetal: 'Cefalica',
+    lcf_lpm: '145',
     movimientos_fetales: '+',
-    tecnico_iniciales: 'AM',
-    observaciones: 'Evolución prenatal favorable.'
+    iniciales_tecnico: 'AM',
+    proxima_cita: '2026-04-10',
+    signos_alarma_examenes_tratamientos: 'Evolución prenatal favorable.'
   },
   {
     id_control: 'mock-ctrl-002',
-    id_embarazo: 'mock-emb-001',
-    fecha: '2026-05-15',
-    edad_gestacional_semanas: 17,
-    peso: 65.0,
+    embarazo_id: 'mock-emb-001',
+    fecha_visita: '2026-05-15',
+    eg_semanas: 17,
+    peso_kg: 65.0,
     pa_sistolica: 118,
     pa_diastolica: 78,
-    altura_uterina: 18,
-    presentacion: 'Cefálica',
-    lcf: 148,
-    movimientos_fetales: '++',
-    tecnico_iniciales: 'AM',
-    observaciones: 'Movimientos fetales activos. Presión normal.'
+    altura_uterina_cm: 18,
+    presentacion_fetal: 'Cefalica',
+    lcf_lpm: '148',
+    movimientos_fetales: '+',
+    iniciales_tecnico: 'AM',
+    proxima_cita: '2026-06-15',
+    signos_alarma_examenes_tratamientos: 'Movimientos fetales activos. Presión normal.'
   }
 ];
 
 export const MOCK_LABORATORIO_DEMO: Laboratorio = {
-  id_laboratorio: 'mock-lab-001',
-  id_embarazo: 'mock-emb-001',
-  hb_1: 12.5,
-  grupo: 'O',
-  factor: 'RH+',
-  vdrl_1: 'No reactivo',
-  vih_1: 'No reactivo',
-  glucemia_1: 85,
-  chagas: 'No reactivo',
-  toxo_igg_1: 'No reactivo',
-  toxo_igm_1: 'No reactivo'
+  embarazo_id: 'mock-emb-001',
+  chagas: 'negativo',
+  paludismo_malaria: 'negativo',
+  bacteriuria_resultado: 'normal',
+  toxo_menor_20sem_igg: 'negativo',
+  sifilis_vdrl_menor_20sem: 'negativo',
+  hb_menor_20sem: 12.5,
+  glucemia_menor_20sem: 85,
 };
 
 export const MOCK_CITAS_DEMO: Cita[] = [
