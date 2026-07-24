@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependencias (incluyendo typescript para compilar dist/)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copiar código fuente
 COPY . .
