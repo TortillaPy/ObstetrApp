@@ -31,8 +31,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-12345678}@db:5432/${POSTGRES_DB:-obstetrapp_db}?schema=public
       JWT_SECRET: ${JWT_SECRET:-ingresa_aqui_una_clave_secreta_larga_y_aleatoria_para_jwt}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://localhost:80}
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     depends_on:
       db:
         condition: service_healthy
