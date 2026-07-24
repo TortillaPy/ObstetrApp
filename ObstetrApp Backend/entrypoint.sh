@@ -16,7 +16,7 @@ echo "🗄️ Sincronizando esquema de base de datos..."
 npx prisma db push
 
 echo "🌱 Ejecutando siembra inicial de la base de datos..."
-npx prisma db seed || true
+node dist/seed.js || true
 
 echo "⚡ Iniciando servidor de producción Express..."
 exec node dist/index.js
