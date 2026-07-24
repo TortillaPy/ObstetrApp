@@ -6,24 +6,25 @@ Welcome to the full technical documentation for **ObstetrApp**. This document co
 
 ## 📋 Table of Contents / Tabla de Contenidos / Sumário
 
+- 🇬🇧 [English Section: Technical Specification & Docker Guide](#-english-section-technical-specification--docker-guide)
+  - [1. System Architecture](#1-system-architecture)
+  - [2. Data Model & Prisma Schema](#2-data-model--prisma-schema)
+  - [3. Multi-OS Docker Deployment (Linux, Windows, macOS)](#3-multi-os-docker-deployment-linux-windows-macos)
 - 🇪🇸 [Sección en Español: Documentación Técnica y Despliegue](#-sección-en-español-documentación-técnica-y-despliegue)
   - [1. Arquitectura del Sistema](#1-arquitectura-del-sistema)
   - [2. Modelo de Datos y Esquema Prisma (SQLite / PostgreSQL)](#2-modelo-de-datos-y-esquema-prisma)
   - [3. Despliegue con Docker (Linux, Windows, macOS)](#3-despliegue-con-docker-linux-windows-macos)
-- 🇬🇧 [English Section: Technical Specification & Docker Guide](#-english-section-technical-specification--docker-guide)
-  - [1. System Architecture](#1-system-architecture)
-  - [2. Multi-OS Docker Deployment (Linux, Windows, macOS)](#2-multi-os-docker-deployment-linux-windows-macos)
 - 🇵🇹 [Seção em Português: Especificação Técnica e Implantação](#-seção-em-português-especificação-técnica-e-implantação)
   - [1. Arquitetura do Sistema](#1-arquitetura-do-sistema)
   - [2. Implantação com Docker (Linux, Windows, macOS)](#2-implantação-com-docker-linux-windows-macos)
 
 ---
 
-# 🇪🇸 Sección en Español: Documentación Técnica y Despliegue
+# 🇬🇧 English Section: Technical Specification & Docker Guide
 
-## 1. Arquitectura del Sistema
+## 1. System Architecture
 
-ObstetrApp utiliza una **Arquitectura Desacoplada Cliente-Servidor** estructurada bajo un monorepo administrado por **NPM Workspaces**.
+ObstetrApp features a decoupled **Client-Server Architecture** operating under an **NPM Workspaces** monorepo structure.
 
 ```
 +-------------------------------------------------------+
@@ -41,10 +42,82 @@ ObstetrApp utiliza una **Arquitectura Desacoplada Cliente-Servidor** estructurad
                            | Prisma ORM
                            v
 +-------------------------------------------------------+
-|                Capa de Base de Datos                  |
-|        (Dev: SQLite / Producción: PostgreSQL 15)     |
+|                    Database Layer                     |
+|        (Dev: SQLite / Production: PostgreSQL 15)      |
 +-------------------------------------------------------+
 ```
+
+### Tech Stack Highlights:
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, Lucide Icons, Zustand, React Router v7.
+- **Backend**: Node.js, Express, TypeScript, Prisma ORM, JWT, Bcrypt, Helmet, Express Rate Limit.
+- **Database**: SQLite (Dev) / PostgreSQL 15 (Production in Docker).
+- **Reverse Proxy**: Nginx Alpine with `/api` upstream proxying and 60s resilience timeouts.
+
+---
+
+## 2. Data Model & Prisma Schema
+
+The backend uses **Prisma ORM** for data access and schema management.
+
+### Key Entities:
+- **Usuario**: Stores doctors and administrators (`email`, `password_hash`, `rol`, `especialidad`, `registro_prof`, `nombre_clinica`, `direccion`, `telefono`).
+- **Paciente**: Patient records (`cedula_id`, `nombre`, `apellido`, `fecha_nacimiento`, `medico_id`).
+- **Embarazo**: Active pregnancy management including Gestational Age (GA), Estimated Due Date (EDD), and obstetric history (Gestas, Partos, Cesáreás, Abortos).
+- **Control**: Perinatal prenatal care records (weight, blood pressure, uterine height, FHR, fetal movements, technician initials).
+- **Cita**: Appointment scheduling and outpatient clinical notes (SOAP, Ultrasound, Pap smear, Gynecology).
+- **Receta / Reposo / SolicitudLaboratorio**: Print-ready letterhead medical PDF documents.
+
+---
+
+## 3. Multi-OS Docker Deployment (Linux, Windows, macOS)
+
+### 🐧 **A. Linux Deployment (Cloud VPS / Ubuntu / Debian)**
+1. Install Docker and Compose plugin:
+   ```bash
+   sudo apt update && sudo apt install -y docker.io docker-compose-v2
+   sudo systemctl enable --now docker
+   ```
+2. Create environment file:
+   ```bash
+   cp .env.production.example .env
+   ```
+3. Build and run containers:
+   ```bash
+   sudo docker compose up -d --build
+   ```
+4. (Optional) Run manual DB seed:
+   ```bash
+   sudo docker compose exec backend node dist/seed.js
+   ```
+
+---
+
+### 🪟 **B. Windows Deployment (Docker Desktop + WSL2 / PowerShell)**
+1. Install **Docker Desktop for Windows** (with WSL2 enabled).
+2. Open **PowerShell** in project root:
+   ```powershell
+   Copy-Item .env.production.example .env
+   docker compose up -d --build
+   ```
+3. Access app at `http://localhost`.
+
+---
+
+### 🍎 **C. macOS Deployment (Apple Silicon M1/M2/M3 & Intel)**
+1. Install **Docker Desktop for Mac**.
+2. Open Terminal in project directory:
+   ```bash
+   cp .env.production.example .env
+   docker compose up -d --build
+   ```
+
+---
+
+# 🇪🇸 Sección en Español: Documentación Técnica y Despliegue
+
+## 1. Arquitectura del Sistema
+
+ObstetrApp utiliza una **Arquitectura Desacoplada Cliente-Servidor** estructurada bajo un monorepo administrado por **NPM Workspaces**.
 
 ---
 
@@ -52,83 +125,23 @@ ObstetrApp utiliza una **Arquitectura Desacoplada Cliente-Servidor** estructurad
 
 El backend utiliza **Prisma ORM** para el acceso a datos y la gestión de esquemas.
 
-### Entidades Principales:
-- **Usuario**: Almacena médicos y administradores (`email`, `password_hash`, `rol`, `especialidad`, `registro_prof`, `nombre_clinica`, `direccion`, `telefono`).
-- **Paciente**: Registro patronímico de la paciente embarazada o ginecológica (`cedula_id`, `nombre`, `apellido`, `fecha_nacimiento`, `medico_id`).
-- **Embarazo**: Control de embarazo activo con Edad Gestacional (EG), Fecha Probable de Parto (FPP), y fórmula obstétrica (Gestas, Partos, Cesáreas, Abortos).
-- **Control**: Bitácora de consulta prenatal perinatal (peso, presión arterial, altura uterina, LCF, movimientos fetales, iniciales del técnico).
-- **Cita**: Agendamiento y consultas ambulatorias (SOAP, Ecografía, Papanicolaou, Ginecología).
-- **Receta / Reposo / SolicitudLaboratorio**: Documentos clínicos imprimibles en formato PDF membretado.
-
 ---
 
 ## 3. Despliegue con Docker (Linux, Windows, macOS)
 
 ### 🐧 **A. Despliegue en Linux (VPS / Ubuntu / Debian)**
-1. Instalar Docker y la extensión Compose:
-   ```bash
-   sudo apt update && sudo apt install -y docker.io docker-compose-v2
-   sudo systemctl enable --now docker
-   ```
-2. Crear variables de entorno de producción:
-   ```bash
-   cp .env.production.example .env
-   ```
-3. Construir e iniciar contenedores:
-   ```bash
-   sudo docker compose up -d --build
-   ```
-
----
-
-### 🪟 **B. Despliegue en Windows (Docker Desktop + WSL2 / PowerShell)**
-1. Instalar **Docker Desktop para Windows** (con WSL2 habilitado).
-2. Abrir **PowerShell** en la carpeta del proyecto y ejecutar:
-   ```powershell
-   Copy-Item .env.production.example .env
-   docker compose up -d --build
-   ```
-3. Abrir navegador en `http://localhost`.
-
----
-
-### 🍎 **C. Despliegue en macOS (Apple Silicon M1/M2/M3 e Intel)**
-1. Instalar **Docker Desktop para Mac**.
-2. Abrir la Terminal en la carpeta del proyecto:
-   ```bash
-   cp .env.production.example .env
-   docker compose up -d --build
-   ```
-3. Abrir navegador en `http://localhost`.
-
----
-
-# 🇬🇧 English Section: Technical Specification & Docker Guide
-
-## 1. System Architecture
-
-ObstetrApp features a decoupled **Client-Server Architecture** operating under a monorepo.
-
-### Tech Stack:
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, Lucide Icons, Zustand, React Router v7.
-- **Backend**: Node.js, Express, TypeScript, Prisma ORM, JWT, Bcrypt, Helmet, Express Rate Limit.
-- **Database**: SQLite (Dev) / PostgreSQL 15 (Prod in Docker).
-
-## 2. Multi-OS Docker Deployment (Linux, Windows, macOS)
-
-### Linux Deployment:
 ```bash
 cp .env.production.example .env
 sudo docker compose up -d --build
 ```
 
-### Windows Deployment (PowerShell):
+### 🪟 **B. Despliegue en Windows (Docker Desktop + WSL2 / PowerShell)**
 ```powershell
 Copy-Item .env.production.example .env
 docker compose up -d --build
 ```
 
-### macOS Deployment (Terminal):
+### 🍎 **C. Despliegue en macOS (Apple Silicon e Intel)**
 ```bash
 cp .env.production.example .env
 docker compose up -d --build
@@ -139,30 +152,12 @@ docker compose up -d --build
 # 🇵🇹 Seção em Português: Especificação Técnica e Implantação
 
 ## 1. Arquitetura do Sistema
-
 O **ObstetrApp** é um sistema completo de gestão clínica para ginecologia e obstetrícia.
 
-### Tecnologias:
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4.
-- **Backend**: Node.js, Express.js, TypeScript, Prisma ORM.
-- **Banco de Dados**: SQLite (Dev) / PostgreSQL 15 (Produção Docker).
+---
 
 ## 2. Implantação com Docker (Linux, Windows, macOS)
-
-### Linux:
 ```bash
 cp .env.production.example .env
 sudo docker compose up -d --build
-```
-
-### Windows (PowerShell):
-```powershell
-Copy-Item .env.production.example .env
-docker compose up -d --build
-```
-
-### macOS (Terminal):
-```bash
-cp .env.production.example .env
-docker compose up -d --build
 ```
