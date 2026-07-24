@@ -138,6 +138,7 @@ authRouter.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Res
 authRouter.get('/users', authMiddleware, adminOnlyMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const users = await prisma.usuario.findMany({
+      where: { rol: { not: 'ADMIN' } },
       orderBy: { createdAt: 'desc' },
       select: {
         id_usuario: true,
@@ -177,6 +178,11 @@ authRouter.put('/users/:id', authMiddleware, adminOnlyMiddleware, async (req: Au
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
+    // Proteger cuentas ADMIN de modificación accidental
+    if (user.rol === 'ADMIN') {
+      return res.status(403).json({ error: 'Protección de Seguridad: Las cuentas de administrador no pueden ser modificadas desde esta interfaz.' });
+    }
+
     const updatedUser = await prisma.usuario.update({
       where: { id_usuario: id },
       data: {
@@ -208,6 +214,11 @@ authRouter.patch('/users/:id/status', authMiddleware, adminOnlyMiddleware, async
     const user = await prisma.usuario.findUnique({ where: { id_usuario: id } });
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Proteger cuentas ADMIN de desactivación accidental
+    if (user.rol === 'ADMIN') {
+      return res.status(403).json({ error: 'Protección de Seguridad: Las cuentas de administrador no pueden ser desactivadas desde la aplicación.' });
     }
 
     const updatedUser = await prisma.usuario.update({
@@ -250,6 +261,15 @@ authRouter.patch('/users/:id/subscription', authMiddleware, adminOnlyMiddleware,
   try {
     const { id } = req.params;
     const { estado_suscripcion, fecha_vencimiento, plan, monto_mensual, notas_admin } = req.body;
+
+    // Proteger cuentas ADMIN de modificación de suscripción
+    const targetUser = await prisma.usuario.findUnique({ where: { id_usuario: id } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    if (targetUser.rol === 'ADMIN') {
+      return res.status(403).json({ error: 'Protección de Seguridad: La suscripción de una cuenta de administrador no puede ser modificada desde la aplicación.' });
+    }
 
     const updatedUser = await prisma.usuario.update({
       where: { id_usuario: id },
