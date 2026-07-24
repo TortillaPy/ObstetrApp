@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Instalar OpenSSL para compatibilidad del Query Engine de Prisma en Alpine Linux
+RUN apk add --no-cache openssl
+
 # Copiar archivos de paquetes y dependencias
 COPY package*.json ./
 
